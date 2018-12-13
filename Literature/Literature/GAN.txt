@@ -1,0 +1,8 @@
+Adversarial Networks for image noise:
+	https://cv-tricks.com/how-to/breaking-deep-learning-with-adversarial-examples-using-tensorflow/
+
+General Intro to GANs:
+	http://blog.aylien.com/introduction-generative-adversarial-networks-code-tensorflow/
+
+Presentation of Noise Detection (maybe interesting for the layout):
+	https://people.xiph.org/~jm/demo/rnnoise/
