@@ -9,6 +9,10 @@ import soundfile as sf	# requires PySound		tested using python3.6.5
 from scipy.io import wavfile
 
 
+import librosa		# required by cqt
+from librosa import display
+
+
 """
 input : file name, must be a mid file (*.mid)
 output : none
@@ -26,3 +30,15 @@ def resampling(ifi, up=160, down=441):
     
     ofi = ifi.replace(".wav", "_16k_s.wav")
     sf.write(ofi, np.stack((data0_res, data1_res), axis=1), 16000)
+
+"""
+Input: filepath to .wav file
+Output: CQT
+Todo: error checking
+"""
+def getCQT(f):
+    y, sr = librosa.load(f)
+#example:  y,sr = librosa.load("MAPS_MUS-chpn-p7_SptkBGCl_16k_s.wav")
+
+    return np.abs(librosa.cqt(y, sr=sr))
+

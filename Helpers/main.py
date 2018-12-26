@@ -9,6 +9,8 @@ ifile_mid = 'MAPS_MUS-mond_1_SptkBGAm.mid'
 ifile_wav = 'MAPS_MUS-mond_1_SptkBGAm.wav'	# longer
 ifile_wav = 'MAPS_MUS-chpn-p7_SptkBGCl.wav'  # shorter
 
+C = Preprocessing.getCQT(ifile_wav)
+
 IO.MIDI2file(ifile_mid)
 
 outstr = IO.readMIDI(ifile_mid)
