@@ -1,3 +1,11 @@
+# gan.py is ein schönes Beispiel aus dem Internet, kurz, kompakt, 
+# übersichtlich, braucht nicht so viele zusätzliche Pakete, und läuft. Als 
+# Daten wurden zwar Image benutzt. Doch kann man sich die Struktur anschauen.
+# https://github.com/eriklindernoren/Keras-GAN
+#
+# gefunden von Heman
+
+
 from __future__ import print_function, division
 
 from keras.datasets import mnist

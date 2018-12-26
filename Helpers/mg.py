@@ -1,3 +1,12 @@
+# mg.py ist ein anderes Beispiel, dass die Generierung von Musikstück zum 
+# Inhalt hat. Ebenso kurz, kompakt, übersichtlich, und läuft nach kleineren
+# Anpassungen bei mir.
+# Ursprünglich aus https://github.com/subpath/Keras_music_gereration/blob/master/Music%20gerenation%20with%20Keras%20and%20TF.ipynb.
+# Generiert ein kurzes Stück, das man in VLC abspeielen kann (klingt noch nicht 
+# so gut)
+
+
+
 import mido
 from mido import MidiFile, MidiTrack, Message
 from keras.layers import LSTM, Dense, Activation, Dropout, Flatten
