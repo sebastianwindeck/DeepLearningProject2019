@@ -1,22 +1,25 @@
 import numpy as np
-import Preprocessing
-import Play
-import IO
+from Helpers.Preprocessing import getCQT, resampling
+#import Play
+from Helpers.IO import readMIDI, readWAV, MIDI2file
 from sklearn.utils.validation import check_array, column_or_1d
 
 #ifile_mid = 'mary.mid'
+
+#Kurze Beschreibung was genau welches Dataset ist
 ifile_mid = 'MAPS_MUS-mond_1_SptkBGAm.mid'
 ifile_wav = 'MAPS_MUS-mond_1_SptkBGAm.wav'	# longer
 ifile_wav = 'MAPS_MUS-chpn-p7_SptkBGCl.wav'  # shorter
 
-C = Preprocessing.getCQT(ifile_wav)
+#Was macht getCQT??
+C = getCQT(ifile_wav)
 
-IO.MIDI2file(ifile_mid)
+MIDI2file(ifile_mid)
 
-outstr = IO.readMIDI(ifile_mid)
+outstr = readMIDI(ifile_mid)
 column_or_1d(outstr)
 
-wavContent = IO.readWAV(ifile_wav)
+wavContent = readWAV(ifile_wav)
 #check_array(wavContent, dtype = 'str' , ensure_min_samples = 1)
 check_array(wavContent, ensure_2d= True , ensure_min_samples = 1)
 
@@ -34,7 +37,7 @@ check_array(wavContent, ensure_2d= True , ensure_min_samples = 1)
 #print("starting playw5")
 #Play.playw5(ifile_wav)
 
-Preprocessing.resampling("MAPS_MUS-chpn-p7_SptkBGCl.wav", 160, 441)
+resampling("MAPS_MUS-chpn-p7_SptkBGCl.wav", 160, 441)
 #resampling.py MAPS_MUS-mond_1_SptkBGAm.wav
 #resampling.py MAPS_MUS-chpn-p7_SptkBGCl.wav
 #resampling.py MAPS_MUS-bach_846_SptkBGAm.wav
