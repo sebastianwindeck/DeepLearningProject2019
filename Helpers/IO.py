@@ -83,7 +83,7 @@ def WAV2file(ifi, ofo=''):
     nchannels, sampwidth, framerate, nframes, comptype, compname = sr.getparams()  # for future use, seems not available in scipy.io.wavfile
 
     if (ofo == ''):
-        ofo = ifi.replace(".wav", ".txt")
+        ofo = ifi.replace(".wav", "_np.txt")
 
     fs, data = wavfile.read(ifi) # could also use sr.readframes(n) :  sr.readframes doesn't seem to deliver left / right channels 
 
