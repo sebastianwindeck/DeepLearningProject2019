@@ -9,6 +9,7 @@ from sklearn.utils.validation import check_array, column_or_1d
 #Kurze Beschreibung was genau welches Dataset ist
 ifile_mid = 'MAPS_MUS-mond_1_SptkBGAm.mid'
 ifile_wav = 'MAPS_MUS-mond_1_SptkBGAm.wav'	# longer
+#Wieso den gleichen namen geben? Dann wird das überschrieben
 ifile_wav = 'MAPS_MUS-chpn-p7_SptkBGCl.wav'  # shorter
 
 #Was macht getCQT??
