@@ -132,4 +132,10 @@ def breakn(x, n):
         xn[i, :, :] = x[0:d0, (i*n):(i*n+n)]
     return xn
     
-
+"""
+Input: x : numpy array 
+Output: (x - mean(x))/stdev(x)
+Todo: error checking
+"""
+def scale(x):
+    return (x - np.mean(x)) / np.std(x)
