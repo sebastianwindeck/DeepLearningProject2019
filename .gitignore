@@ -108,3 +108,13 @@ venv.bak/
 
 # Data
 MAPS
+
+# ignore music data files:
+*.mid
+*.wav
+*.dat
+foreignCode\wav2mid\ma*
+foreignCode\wav2mid\wav2mid-master\data
+foreignCode\wav2mid\wav2mid-master\examples
+foreignCode\wav2mid\wav2mid-master\models
+foreignCode\wav2mid\wav2mid-master\notebooks
