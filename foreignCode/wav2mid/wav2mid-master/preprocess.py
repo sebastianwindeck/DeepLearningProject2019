@@ -16,10 +16,25 @@ from config import load_config
 
 import numpy as np
 
+sr = 22050
+hop_length = 512
+window_size = 7
+# changed_AS
+# min_midi = 21
+# max_midi = 108
+min_midi = 21+8+8
+max_midi = 108-8-8
+note_range = max_midi-min_midi+1
+
 def readmm(d,args):
     ipath = os.path.join(d,'input.dat')
-    note_range = 88
+    # changed_AS
+    # note_range = 88
+    # note_range = int(args['max_midi'])-int(args['min_midi'])+1
     n_bins = int(args['bin_multiple']) * note_range
+    # n_bins = self.n_bins
+    # note_range = self.note_range
+    
     window_size = 7
     mmi = np.memmap(ipath, mode='r')
     i = np.reshape(mmi,(-1,window_size,n_bins))
@@ -35,6 +50,11 @@ class DataGen:
         self.mmdirs =  os.listdir(dirpath)
         self.spe = 0 #steps per epoch
         self.dir = dirpath
+        
+        # changed_AS (added):
+        self.note_range = int(args['max_midi'])-int(args['min_midi'])+1
+        self.n_bins = int(args['bin_multiple']) * note_range
+        self.args = args
 
         for mmdir in self.mmdirs:
             print(mmdir)
@@ -72,7 +92,9 @@ class DataGen:
                     print('switching to ', self.mmdirs[self.current_file_idx:self.current_file_idx+self.num_files])
                     for j in range(self.num_files):
                         mmdir = os.path.join(self.dir,self.mmdirs[self.current_file_idx+j])
-                        i,o = readmm(mmdir,args)
+                        # changed_AS:
+                        # i,o = readmm(mmdir,args)
+                        i,o = readmm(mmdir, self.args)
                         if j == 0:
                             self.inputs,self.output = i,o
                         else:
@@ -94,17 +116,14 @@ class DataGen:
     return inputs,outputs'''
 
 
-sr = 22050
-hop_length = 512
-window_size = 7
-min_midi = 21
-max_midi = 108
 
 
 def wav2inputnp(audio_fn,spec_type='cqt',bin_multiple=3):
     print("wav2inputnp")
     bins_per_octave = 12 * bin_multiple #should be a multiple of 12
-    n_bins = (max_midi - min_midi + 1) * bin_multiple
+    # change_AS
+    # n_bins = (max_midi - min_midi + 1) * bin_multiple
+    n_bins = note_range * bin_multiple
 
     #down-sample,mono-channel
     y,_ = librosa.load(audio_fn,sr)

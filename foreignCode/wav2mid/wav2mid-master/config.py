@@ -61,6 +61,12 @@ if __name__ == '__main__':
     parser.add_argument('--max', type=int, default=108, #C8
                         help='Max MIDI value')'''
 
+    # changed_AS
+    parser.add_argument('min_midi', type=int, default=21+8+8, #A0
+                        help='Min MIDI value')
+    parser.add_argument('max_midi', type=int, default=108-8-8, #C8
+                        help='Max MIDI value')
+
     args = vars(parser.parse_args())
 
     create_config(args)

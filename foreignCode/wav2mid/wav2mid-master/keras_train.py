@@ -116,10 +116,14 @@ def baseline_model():
     pool2 = MaxPooling2D(pool_size=(1,3))(do2)
 
     flattened = Flatten()(pool2)
-    fc1 = Dense(1000, activation='sigmoid')(flattened)
+    # changed_AS
+    # fc1 = Dense(1000, activation='sigmoid')(flattened)
+    fc1 = Dense(100, activation='sigmoid')(flattened)
     do3 = Dropout(0.5)(fc1)
 
-    fc2 = Dense(200, activation='sigmoid')(do3)
+    # changed_AS
+    # fc2 = Dense(200, activation='sigmoid')(do3)
+    fc2 = Dense(50, activation='sigmoid')(do3)
     do4 = Dropout(0.5)(fc2)
     outputs = Dense(note_range, activation='sigmoid')(do4)
 
@@ -135,7 +139,9 @@ def resnet_model(bin_multiple):
     reshape = Reshape(input_shape_channels)(inputs)
 
     #normal convnet layer (have to do one initially to get 64 channels)
-    conv = Conv2D(64,(1,bin_multiple*note_range),padding="same",activation='relu')(reshape)
+    # changed_AS
+    # conv = Conv2D(64,(1,bin_multiple*note_range),padding="same",activation='relu')(reshape)
+    conv = Conv2D(32,(1,bin_multiple*note_range),padding="same",activation='relu')(reshape)
     pool = MaxPooling2D(pool_size=(1,2))(conv)
 
     for i in range(int(np.log2(bin_multiple))-1):
@@ -145,16 +151,24 @@ def resnet_model(bin_multiple):
         re = Activation('relu')(bn)
         freq_range = int( (bin_multiple/(2**(i+1)))*note_range )
         print(freq_range)
-        conv = Conv2D(64,(1,freq_range),padding="same",activation='relu')(re)
+        # changed_AS
+        #conv = Conv2D(64,(1,freq_range),padding="same",activation='relu')(re)
+        conv = Conv2D(32,(1,freq_range),padding="same",activation='relu')(re)
 
         #add and downsample
         ad = add([pool,conv])
-        pool = MaxPooling2D(pool_size=(1,2))(ad)
+        # changed_AS
+        # pool = MaxPooling2D(pool_size=(1,2))(ad)
+        pool = MaxPooling2D(pool_size=(1,4))(ad)
 
     flattened = Flatten()(pool)
-    fc = Dense(1024, activation='relu')(flattened)
+    # changed_AS
+    # fc = Dense(1024, activation='relu')(flattened)
+    fc = Dense(64, activation='relu')(flattened)
     do = Dropout(0.5)(fc)
-    fc = Dense(512, activation='relu')(do)
+    # changed_AS
+    # fc = Dense(512, activation='relu')(do)
+    fc = Dense(32, activation='relu')(do)
     do = Dropout(0.5)(fc)
     outputs = Dense(note_range, activation='sigmoid')(do)
 
@@ -163,8 +177,11 @@ def resnet_model(bin_multiple):
     return model
 
 window_size = 7
-min_midi = 21
-max_midi = 108
+# changed_AS:
+#min_midi = 21
+#max_midi = 108
+min_midi = 21+8+8
+max_midi = 108-8-8
 note_range = max_midi - min_midi + 1
 
 
@@ -177,6 +194,8 @@ def train(args):
     global input_shape_channels
 
     bin_multiple = int(args['bin_multiple'])
+    # changed_AS:
+    #note_range = int(args['max_midi']) - int(args['min_midi']) + 1
     print('bin multiple',str(np.log2(bin_multiple)))
     feature_bins = note_range * bin_multiple
     input_shape = (window_size,feature_bins)
@@ -187,7 +206,9 @@ def train(args):
 
     #train params
     batch_size = 256
-    epochs = 1000
+    # epochs = 1000
+    # changed_AS:
+    epochs = 5
 
     trainGen = DataGen(os.path.join(path,'data','train'),batch_size,args)
     valGen = DataGen(os.path.join(path,'data','val'),batch_size,args)
@@ -209,7 +230,8 @@ def train(args):
     model.compile(loss='binary_crossentropy',
               optimizer=SGD(lr=init_lr,momentum=0.9))
     model.summary()
-    #plot_model(model, to_file=os.path.join(path,'model.png'))
+    # re-activate once graphviz works...
+    plot_model(model, to_file=os.path.join(path,'model.png'))
 
     checkpoint = ModelCheckpoint(model_ckpt, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
     early_stop = EarlyStopping(patience=5,monitor='val_loss', verbose=1, mode='min')
@@ -243,7 +265,7 @@ def train(args):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'val'], loc='upper left')
-    plt.savefig('baseline/loss.png')
+    plt.savefig('loss.png')
 
     #test
     testGen = DataGen(os.path.join(path,'data','test'),batch_size,args)

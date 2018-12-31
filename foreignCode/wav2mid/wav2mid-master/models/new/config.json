@@ -1,0 +1,1 @@
+{"model_name": "new", "spec_type": "cqt", "init_lr": "1e-1", "lr_decay": "half", "bin_multiple": "4", "residual": "True", "min_midi": "37", "max_midi": "92"}
