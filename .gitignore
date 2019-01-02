@@ -113,6 +113,7 @@ MAPS
 *.mid
 *.wav
 *.dat
+*.h5
 foreignCode\wav2mid\ma*
 foreignCode\wav2mid\wav2mid-master\data
 foreignCode\wav2mid\wav2mid-master\examples
