@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Starting with adversarial training.
-Jan  2 2019
 
-@author: andre
+@author: Andreas Streich, January 2019
 """
 
 from __future__ import print_function, division
@@ -44,9 +43,10 @@ import tensorflow as tf
 import sklearn
 from sklearn.metrics import precision_recall_fscore_support
 
+from operator import concat
+
 from config import create_config, load_config
 from localsearch import LocalSearchAttack
-
 
 
 """
@@ -121,11 +121,26 @@ def prepareData(args):
     #config = load_config(os.path.join(path,'config.json'))
 
     bin_multiple = int(args['bin_multiple'])
-    spec_type = args['spec_type']
 
     framecnt = 0
-    # maxFramesPerFile = 100 # set to -1 to ignore 
-    maxFrames = 100 # set to -1 to ignore 
+    maxFramesPerFile = 200 # set to -1 to ignore 
+    maxFrames = 5000 # set to -1 to ignore 
+    
+    fileappend =  str(maxFramesPerFile) + 'pf_max' + str(maxFrames) + '.dat'
+    datapath = joinAndCreate(path,'data')
+    filenameIN  = os.path.join(datapath,'input_' + fileappend)
+    filenameOUT = os.path.join(datapath,'output_'+ fileappend)
+    
+    if os.path.isfile(filenameIN) and os.path.isfile(filenameOUT):
+        n_bins = note_range * bin_multiple
+        print('loading precomputed data from ' + filenameIN)
+        mmi = np.memmap(filenameIN, mode='r')
+        inputs = np.reshape(mmi,(-1, window_size, n_bins))
+        
+        mmo = np.memmap(filenameOUT, mode='r')
+        outputs = np.reshape(mmo,(-1, note_range))
+        
+        return inputs, outputs, path
     
     # hack to deal with high PPQ from MAPS
     # https://github.com/craffel/pretty-midi/issues/112
@@ -159,14 +174,21 @@ def prepareData(args):
 
                         pm_mid = pretty_midi.PrettyMIDI(mid_fn)
 
-                        inputnp = wav2inputnp(audio_fn,spec_type=spec_type,bin_multiple=bin_multiple)
-                        times = librosa.frames_to_time(np.arange(inputnp.shape[0]),sr=sr,hop_length=hop_length)
+                        inputnp = wav2inputnp(audio_fn, 
+                                              spec_type = args['spec_type'],
+                                              bin_multiple= int(args['bin_multiple']))
+                        times = librosa.frames_to_time(np.arange(inputnp.shape[0]),
+                                                       sr=sr,
+                                                       hop_length=hop_length)
                         outputnp = mid2outputnp(pm_mid,times)
 
                         # check that num onsets is equal
                         if inputnp.shape[0] == outputnp.shape[0]:
                             print("adding to dataset fprefix {}".format(fprefix))
                             addCnt += 1
+                            if maxFramesPerFile>0 and inputnp.shape[0]>maxFramesPerFile:
+                                inputnp  = inputnp[ :maxFramesPerFile]
+                                outputnp = outputnp[:maxFramesPerFile]
                             framecnt += inputnp.shape[0]
                             print("framecnt is {}".format(framecnt))
                             inputs.append(inputnp)
@@ -202,14 +224,11 @@ def prepareData(args):
             fn = subdir.split('/')[-2]
         #fn += '.h5'
         # save inputs,outputs to hdf5 file
-        datapath = joinAndCreate(path,'data')
         #fnpath = joinAndCreate(datapath,fn)
 
-        mmi = np.memmap(filename=os.path.join(datapath,'input2.dat'), 
-                        mode='w+',shape=inputs.shape)
+        mmi = np.memmap(filename=filenameIN, mode='w+',shape=inputs.shape)
         mmi[:] = inputs[:]
-        mmo = np.memmap(filename=os.path.join(datapath,'output2.dat'), 
-                        mode='w+',shape=outputs.shape)
+        mmo = np.memmap(filename=filenameOUT, mode='w+',shape=outputs.shape)
         mmo[:] = outputs[:]
         del mmi
         del mmo
@@ -252,12 +271,14 @@ class AdvTrain():
                 'min_midi': '37',
                 'max_midi': '92'}
 
+        self.model_name = args['model_name']
         self.min_midi = int(args['min_midi'])
         self.max_midi = int(args['max_midi'])
         self.bin_multiple = int(args['bin_multiple'])
         self.note_range = int(args['max_midi'])-int(args['min_midi'])+1
         self.n_bins = int(args['bin_multiple']) * note_range
         self.init_lr = float(args['init_lr'])
+        self.spec_type = args['spec_type']
         self.args = args
         
         self.sr = 22050
@@ -269,10 +290,6 @@ class AdvTrain():
         
         self.inputs, self.outputs, self.path = prepareData(args)
     
-        self.latent_dim = 100
-
-        #optimizer = Adam(0.0002, 0.5)
-
         # initialize the AMT network:
         self.amt_net = self.init_amt()
         
@@ -356,50 +373,92 @@ class AdvTrain():
         pass
 
 
-    def run_attack(self, X_train, Y_train):
+    def run_attack(self, X_train, Y_train, Nsamples = 1, NnoisePerSample = 10,
+                   type='simplistic'):
         
         # create an adversarial example
         # choose a random sample:
-        idx = np.random.randint(0, X_train.shape[0], 1)
+        idx = np.random.randint(0, X_train.shape[0], Nsamples)
+        my_X = X_train[idx]
+        my_Y = Y_train[idx]
         
-        myAdvSample = Adversarial(self.amt_net, self.criterion,
-                                  X_train[idx], Y_train[idx], 
-                                  MeanSquaredDistance(bounds = [0, X_train.max()]) )
         
-        myAttack = LocalSearchAttack(myAdvSample, unpack=False,
-                 r=1.5, p=10., d=5, t=5, R=150)
+        noisy_X = np.zeros(concat([Nsamples*NnoisePerSample], list(X_train.shape[1:]) ))
+        noisy_Y = np.zeros(concat([Nsamples*NnoisePerSample], list(Y_train.shape[1:]) ))
+        noisy_i = 0;
         
-        # get best adversarial found
-        return myAttack, Y_train[idx]
-    
-        """
-        A black-box attack based on the idea of greedy local search.
-        Parameters
-        ----------
-        input_or_adv : `numpy.ndarray` or :class:`Adversarial`
-            The original, correctly classified image. If image is a
-            numpy array, label must be passed as well. If image is
-            an :class:`Adversarial` instance, label must not be passed.
-        label : int
-            The reference label of the original image. Must be passed
-            if image is a numpy array, must not be passed if image is
-            an :class:`Adversarial` instance.
-        unpack : bool
-            If true, returns the adversarial image, otherwise returns
-            the Adversarial object.
-        r : float
-            Perturbation parameter that controls the cyclic perturbation;
-            must be in [0, 2]
-        p : float
-            Perturbation parameter that controls the pixel sensitivity
-            estimation
-        d : int
-            The half side length of the neighborhood square
-        t : int
-            The number of pixels perturbed at each round
-        R : int
-            An upper bound on the number of iterations
-        """            
+        if type == 'simplistic':
+            for i in range(Nsamples):
+                epsilon = 1e-4
+                foundNoises = 0
+                
+                while foundNoises < NnoisePerSample:
+                    # draw noise pattern
+                    noise = np.random.uniform(0, 1, size=my_X[None,i].shape)
+                    noise = noise.astype(my_X[i].dtype)
+            
+                    # overlay noise pattern on image
+                    perturbed_X = my_X[None,i] + epsilon * noise
+            
+                    # clip pixel values to valid range [0, 1]
+                    perturbed_X = np.clip(perturbed_X, 0, 1)
+                    res = self.amt_net.predict(perturbed_X)
+                    res_r = res.round();
+                    
+                    if (res_r != my_Y[i]).any():
+                        noisy_X[noisy_i,] = perturbed_X
+                        noisy_Y[noisy_i]  = my_Y[i]
+                        epsilon /= 1.5
+                        noisy_i += 1
+                        foundNoises += 1
+                    else:
+                        epsilon *= 2
+                        
+            distance = np.linalg.norm(noise) / noise.size
+            return noisy_X, noisy_Y, distance
+        
+                        
+                
+        elif type == 'LocalSearchAttack':
+            """
+            A black-box attack based on the idea of greedy local search.
+            Parameters
+            ----------
+            input_or_adv : `numpy.ndarray` or :class:`Adversarial`
+                The original, correctly classified image. If image is a
+                numpy array, label must be passed as well. If image is
+                an :class:`Adversarial` instance, label must not be passed.
+            label : int
+                The reference label of the original image. Must be passed
+                if image is a numpy array, must not be passed if image is
+                an :class:`Adversarial` instance.
+            unpack : bool
+                If true, returns the adversarial image, otherwise returns
+                the Adversarial object.
+            r : float
+                Perturbation parameter that controls the cyclic perturbation;
+                must be in [0, 2]
+            p : float
+                Perturbation parameter that controls the pixel sensitivity
+                estimation
+            d : int
+                The half side length of the neighborhood square
+            t : int
+                The number of pixels perturbed at each round
+            R : int
+                An upper bound on the number of iterations
+            """            
+            myAdvSample = Adversarial(self.amt_net, self.criterion, my_X, my_Y, 
+                                      MeanSquaredDistance(bounds = [0, X_train.max()]) )
+            
+            myAttack = LocalSearchAttack(myAdvSample, unpack=False,
+                     r=1.5, p=10., d=5, t=5, R=150)
+            
+            # get best adversarial found
+            return myAttack, Y_train[idx]
+        else:
+            print("Undefined attack type %s", type)
+            
     
     def main_loop(self, maxIter = 10):
         # prepare the data
@@ -420,18 +479,20 @@ class AdvTrain():
             print("** Starting iteration %d" % (epoch))
             
             # train noiser based on current model
-            attack, true_Y = self.run_attack(X_train, Y_train)
+            noisy_X, true_Y, distance = \
+                self.run_attack(X_train, Y_train, Nsamples = 20, 
+                                NnoisePerSample = 10, type='simplistic')
             # append this to the current data
             # TODO: maybe just replace? Or sample afterwards to run training?
-            X_train.append(attack.image())
-            Y_train.append(true_Y)
-            print("Found noise with intensity %.2f for label %d" % (attack.distance, true_Y))
+            X_train = np.append(X_train, noisy_X, axis = 0)
+            Y_train = np.append(Y_train, true_Y,  axis = 0)
+            print("Found confusing noise with intensity %.5f" % (distance))
             
             # retrain model based on obtained noise pattern
-            newLoss = self.train_amt(self, X_train, Y_train)
-            print ("Training loss: %f, acc.: %.2f%%" % (newLoss[0], 100*newLoss[1]))
+            newLoss = self.train_amt(X_train, Y_train)
+            print ("Training loss: %f" % (newLoss))
                        
         
 if __name__ == '__main__':
     at = AdvTrain()
-    at.main_loop()
+    at.main_loop(maxIter = 20)
