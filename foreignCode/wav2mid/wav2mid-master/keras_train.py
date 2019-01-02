@@ -230,7 +230,6 @@ def train(args):
     model.compile(loss='binary_crossentropy',
               optimizer=SGD(lr=init_lr,momentum=0.9))
     model.summary()
-    # re-activate once graphviz works...
     plot_model(model, to_file=os.path.join(path,'model.png'))
 
     checkpoint = ModelCheckpoint(model_ckpt, monitor='val_loss', verbose=1, save_best_only=True, mode='min')

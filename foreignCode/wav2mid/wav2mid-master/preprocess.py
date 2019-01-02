@@ -65,7 +65,8 @@ class DataGen:
 
         self.batch_size = batch_size
         self.current_file_idx = 0
-        print('starting with ', self.mmdirs[self.current_file_idx:self.current_file_idx+self.num_files])
+        print('starting with ', 
+              self.mmdirs[self.current_file_idx:self.current_file_idx+self.num_files])
         for j in range(self.num_files):
             mmdir = os.path.join(self.dir,self.mmdirs[self.current_file_idx+j])
             i,o = readmm(mmdir,args)
@@ -88,8 +89,10 @@ class DataGen:
                 #return rest and then switch files
                 x,y = self.inputs[self.i*self.batch_size:],self.outputs[self.i*self.batch_size:]
                 self.i = 0
-                if len(self.mmdirs) > 1: # no need to open any new files if we only deal with one, like for validation
-                    print('switching to ', self.mmdirs[self.current_file_idx:self.current_file_idx+self.num_files])
+                if len(self.mmdirs) > 1: 
+                    # no need to open any new files if we only deal with one, like for validation
+                    print('switching to ', 
+                          self.mmdirs[self.current_file_idx:self.current_file_idx+self.num_files])
                     for j in range(self.num_files):
                         mmdir = os.path.join(self.dir,self.mmdirs[self.current_file_idx+j])
                         # changed_AS:

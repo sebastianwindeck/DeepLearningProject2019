@@ -1,0 +1,1 @@
+{"model_name": "baseline", "spec_type": "cqt", "init_lr": "1e-2", "lr_decay": "linear", "bin_multiple": "3", "residual": "False", "min_midi": "37", "max_midi": "92"}
