@@ -116,5 +116,3 @@ for note in prediction:
 
 mid.tracks.append(track)
 mid.save(ifile.replace('.mid', '_g.mid'))
-
-									  
