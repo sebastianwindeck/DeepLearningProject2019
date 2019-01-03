@@ -15,11 +15,10 @@ Todo : partial read
 
 
 def readMIDI(f):
-
-    if not ('.mid' in f) == True:
+    if not ('.mid' in f):
         raise ValueError(f + ' is not a valid file path of type .mid')
 
-    if not (os.path.isfile(f)) == True:
+    if not (os.path.isfile(f)):
         raise FileNotFoundError
 
     mid = MidiFile(f)
@@ -40,12 +39,17 @@ output : text file containing all MIDI data
 
 needs : mido package  : pip install mido 
  
-Todo : check for valid input file
-       partial read 
+Todo : partial read 
 """
 
 
 def MIDI2file(ifi, ofo=''):
+    if not ('.mid' in ifi):
+        raise ValueError(ifi + ' is not a valid file path of type .mid')
+
+    if not (os.path.isfile(ifi)):
+        raise FileNotFoundError
+
     mid = MidiFile(ifi)
     ostr = []
 
