@@ -34,6 +34,7 @@ class AMTNetwork():
 
 
 class Noiser():
+    # TODO: [Tanos] Create noise machine for several noise types and intensitiy to combine the noise frame by frame to sample
 
     def __init__(self):
         pass
