@@ -1,0 +1,6 @@
+Logging:
+
+2019-01-03 23:25 SEBASTIAN:
+    Upload file structure for ProjectFolder and TODOs.
+    Please feel free to add TODOs and other structures, config files.
+    Comment and annotate wherever you find mistakes or have ideas.
