@@ -9,7 +9,7 @@ from keras import backend as K
 from keras.utils import plot_model
 import os
 import matplotlib.pyplot as plt
-from code.configuration import load_config
+from ProjectFolder.Code.configuration import load_config
 
 
 
@@ -20,10 +20,9 @@ class AMTNetwork():
         # TODO: [Andreas] define network,
         pass
 
-    def baseline_model(self):
-        # TODO: [Andreas] build network architecture
-        inputs = Input(shape=input_shape)
-        reshape = Reshape(input_shape_channels)(inputs)
+    def init_amt(self):
+        inputs = Input(shape=self.input_shape)
+        reshape = Reshape(self.input_shape_channels)(inputs)
 
         # normal convnet layer (have to do one initially to get 64 channels)
         conv1 = Conv2D(50, (5, 25), activation='tanh')(reshape)
@@ -47,11 +46,13 @@ class AMTNetwork():
         outputs = Dense(note_range, activation='sigmoid')(do4)
 
         model = Model(inputs=inputs, outputs=outputs)
+        model.compile(loss='binary_crossentropy',
+                      optimizer=SGD(lr=self.init_lr, momentum=0.9))
+        model.summary()
+        plot_model(model, to_file=os.path.join(self.path, 'model.png'))
+
+        self.model_ckpt = os.path.join(self.path, 'ckpt.h5')
         return model
-        # 	Festlegen: Parameter Anzahl
-        #   	Architektur: Tiefe
-        # 	    Länge Samples
-        # 	    Anzahl Samples
 
         
 
