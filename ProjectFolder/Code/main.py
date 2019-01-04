@@ -5,15 +5,9 @@ import argparse
 
 
 #   TODO:   [Andreas]   ii. CQT calculate [advTrain]
-parser = argparse.ArgumentParser(
-        description='Preprocess MIDI/Audio file pairs into ingestible data')
 
 #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed. Result saved) kerasTrain ->parameter reduzieren]
-parser.add_argument('model_name',
-                        help='Path to the model directory where data should reside')
 
-args = vars(parser.parse_args())
-train(args)
 
 
 #   TODO:   [Sebastian] iv.	Save params
