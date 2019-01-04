@@ -1,3 +1,6 @@
+
+import argparse
+
 #   TODO:   [all]       i. Init everything, namely: noise level
 
 
@@ -5,6 +8,7 @@
 
 
 #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed. Result saved) kerasTrain ->parameter reduzieren]
+
 
 
 #   TODO:   [Sebastian] iv.	Save params
