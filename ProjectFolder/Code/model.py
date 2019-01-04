@@ -9,7 +9,7 @@ from keras import backend as K
 from keras.utils import plot_model
 import os
 import matplotlib.pyplot as plt
-from config import load_config
+from code.configuration import load_config
 
 
 
