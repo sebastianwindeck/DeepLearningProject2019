@@ -1,6 +1,7 @@
 import librosa
 import numpy as np
 import os
+import pretty_midi
 
 # TODO: [Tanos] Copy and configurate the inputs and outputs
 #               1. input for .mid
@@ -32,7 +33,7 @@ def extract_features(audio_filename, args):
         bin_multiple = args['bin_multiple']
         max_midi = args['max_midi']
         min_midi = args['min_midi']
-        note_range = max_midi - min_midi
+        note_range = max_midi - min_midi + 1
         sr = args['sr']
         hop_length = args['hop_length']
         window_size = args['window_size']
@@ -78,9 +79,13 @@ def extract_features(audio_filename, args):
         return 0
 
 
-def mid2outputnp(pm_mid, times):
+def mid2outputnp(pm_mid, times, args):
     """ TODO: Add comment
     """
+    max_midi = args['max_midi']
+    min_midi = args['min_midi']
+    sr = args['sr']
+
     piano_roll = pm_mid.get_piano_roll(fs=sr, times=times)[min_midi:max_midi + 1].T
     piano_roll[piano_roll > 0] = 1
     return piano_roll
@@ -120,15 +125,13 @@ def prepareData(args):
     # params
     max_midi = args['max_midi']
     min_midi = args['min_midi']
-    note_range = max_midi - min_midi
+    note_range = args['note_range']
     window_size = args['window_size']
     sr = args['sr']
     hop_length = args['hop_length']
     wav_dir = args['wav_dir']
 
-    path = os.path.join('models', args['model_name'])
-    # config = load_config(os.path.join(path,'config.json'))
-
+    datapath = os.path.join(args['proj_root'], 'Features')
     bin_multiple = int(args['bin_multiple'])
 
     framecnt = 0
@@ -137,7 +140,6 @@ def prepareData(args):
 
     fileappend = str(maxFramesPerFile) + 'pf_max' + str(maxFrames) + '.dat'
 
-    datapath = join_create_path(path, 'data')
     filenameIN = os.path.join(datapath, 'input_' + fileappend)
     filenameOUT = os.path.join(datapath, 'output_' + fileappend)
 
@@ -150,14 +152,14 @@ def prepareData(args):
         mmo = np.memmap(filenameOUT, mode='r')
         outputs = np.reshape(mmo, (-1, note_range))
 
-        return inputs, outputs, path
+        return inputs, outputs, datapath
+
+    inputs, outputs = [], []
+    addCnt, errCnt = 0, 0
 
     # hack to deal with high PPQ from MAPS
     # https://github.com/craffel/pretty-midi/issues/112
     pretty_midi.pretty_midi.MAX_TICK = 1e10
-
-    inputs, outputs = [], []
-    addCnt, errCnt = 0, 0
 
     for s in os.listdir(wav_dir):
         subdir = os.path.join(wav_dir, s)
@@ -179,21 +181,20 @@ def prepareData(args):
                     if mid_fn in filenames:
                         # extract_features
                         audio_filename = os.path.join(dp, audio_filename)
-                        inputnp = extract_features(audio_filename,
-                                              spec_type=args['spec_type'],
-                                              bin_multiple=int(args['bin_multiple']))
+                        inputnp = extract_features(audio_filename, args)
                         times = librosa.frames_to_time(np.arange(inputnp.shape[0]),
                                                        sr=sr, hop_length=hop_length)
                         # mid2outputnp
                         mid_fn = os.path.join(dp, mid_fn)
                         pm_mid = pretty_midi.PrettyMIDI(mid_fn)
-                        outputnp = mid2outputnp(pm_mid, times)
+
+                        outputnp = mid2outputnp(pm_mid, times, args)
 
                         # check that num onsets is equal
                         if inputnp.shape[0] == outputnp.shape[0]:
                             print("adding to dataset fprefix {}".format(fprefix))
                             addCnt += 1
-                            if maxFramesPerFile > 0 and inputnp.shape[0] > maxFramesPerFile:
+                            if inputnp.shape[0] > maxFramesPerFile > 0:
                                 inputnp = inputnp[:maxFramesPerFile]
                                 outputnp = outputnp[:maxFramesPerFile]
                             framecnt += inputnp.shape[0]
@@ -206,14 +207,14 @@ def prepareData(args):
                             print(inputnp.shape)
                             print(outputnp.shape)
 
-                if maxFrames > 0 and framecnt > maxFrames:
+                if framecnt > maxFrames > 0:
                     print("have enought frames, leaving {}".format(subdir))
                     break
-            if maxFrames > 0 and framecnt > maxFrames:
+            if framecnt > maxFrames > 0:
                 print("have enought frames, leaving {}".format(wav_dir))
                 break
 
-        if maxFrames > 0 and framecnt > maxFrames:
+        if framecnt > maxFrames > 0:
             print("have enought frames, leaving {}".format(wav_dir))
             break
 
@@ -225,13 +226,10 @@ def prepareData(args):
         inputs = np.concatenate(inputs)
         outputs = np.concatenate(outputs)
 
-        fn = subdir.split('/')[-1]
-        if not fn:
-            fn = subdir.split('/')[-2]
-        # fn += '.h5'
-        # save inputs,outputs to hdf5 file
-        # fnpath = join_create_path(datapath,fn)
-
+        print("inputs.shape")
+        print(inputs.shape)
+        print("outputs.shape")
+        print(outputs.shape)
         mmi = np.memmap(filename=filenameIN, mode='w+', shape=inputs.shape)
         mmi[:] = inputs[:]
         mmo = np.memmap(filename=filenameOUT, mode='w+', shape=outputs.shape)
@@ -239,6 +237,6 @@ def prepareData(args):
         del mmi
         del mmo
 
-    return inputs, outputs, path
+    return inputs, outputs, datapath
 
 # End audio stuff

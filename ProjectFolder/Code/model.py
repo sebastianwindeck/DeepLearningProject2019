@@ -1,4 +1,5 @@
 
+from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.layers import Conv2D, MaxPooling2D, add
@@ -8,18 +9,28 @@ from keras.models import Model, load_model
 from keras.optimizers import SGD
 from keras import backend as K
 from keras.utils import plot_model
+
+import numpy as np
+from operator import concat
 import os
+
+import pretty_midi
+
+import tensorflow as tf
+
+import sklearn
+from sklearn.metrics import precision_recall_fscore_support
+
 import matplotlib.pyplot as plt
 # AS: not needed
 # from ProjectFolder.Code.configuration import load_config
 
 
-class linear_decay(Callback):
-    '''
-        decay = decay value to subtract each epoch
-    '''
+class LinearDecay(Callback):
+    # Define a linear pattern for the decay of the learning rate.
+
     def __init__(self, initial_lr,epochs):
-        super(linear_decay, self).__init__()
+        super(LinearDecay, self).__init__()
         self.initial_lr = initial_lr
         self.decay = initial_lr/epochs
 
@@ -29,12 +40,12 @@ class linear_decay(Callback):
         K.set_value(self.model.optimizer.lr, new_lr)
 
 
-class half_decay(Callback):
-    '''
-        decay = decay value to subtract each epoch
-    '''
+class HalfDecay(Callback):
+    # currently not used. Was copied from keras_train.py (but not used there neither)
+    # -> can probably be deleted.
+
     def __init__(self, initial_lr,period):
-        super(half_decay, self).__init__()
+        super(HalfDecay, self).__init__()
         self.init_lr = initial_lr
         self.period = period
 
@@ -45,28 +56,28 @@ class half_decay(Callback):
         K.set_value(self.model.optimizer.lr, lr)
 
 
-class AMTNetwork():
+class AMTNetwork:
     def __init__(self, args):
         self.bin_multiple = args['bin_multiple']
         self.max_midi = args['max_midi']
         self.min_midi = args['min_midi']
-        self.note_range = self.max_midi - self.min_midi
+        self.note_range = args['note_range']
         self.sr = args['sr']
         self.hop_length = args['hop_length']
         self.window_size = args['window_size']
 
-        self.feature_bins = self.note_range * self.bin_multiple
-        self.input_shape = (self.window_size, self.feature_bins)
-        self.input_shape_channels = (self.window_size, self.feature_bins, 1)
+        self.feature_bins = args['feature_bins']
+        self.input_shape = args['input_shape']
+        self.input_shape_channels = args['input_shape_channels']
 
         self.bins_per_octave = 12 * self.bin_multiple  # should be a multiple of 12
-        self.n_bins = self.note_range * self.bin_multiple
+        self.n_bins = args['n_bins']
 
         self.init_lr = args['init_lr']
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
 
-    def init_amt(self):
+    #def init_amt(self):
         # TODO: [Andreas] define network,
 
         inputs = Input(shape=self.input_shape)
@@ -93,15 +104,13 @@ class AMTNetwork():
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
-        model = Model(inputs=inputs, outputs=outputs)
+        self.model = Model(inputs=inputs, outputs=outputs)
 
         # TODO [Malte]: Was ist eine passende loss function für AMT?
-        model.compile(loss='binary_crossentropy',
+        self.model.compile(loss='binary_crossentropy',
                       optimizer=SGD(lr=self.init_lr, momentum=0.9))
-        model.summary()
-        plot_model(model, to_file=os.path.join(self.path, 'model.png'))
-
-        return model
+        self.model.summary()
+        plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
 
 
     def train(self, features, labels, epochs, train_descr=''):
@@ -119,9 +128,9 @@ class AMTNetwork():
 
         # how does the learning rate change over time?
         if self.lr_decay == 'linear':
-            decay = linear_decay(self.init_lr, epochs)
+            decay = LinearDecay(self.init_lr, epochs)
         else:
-            decay = half_decay(self.init_lr, 5)
+            decay = HalfDecay(self.init_lr, 5)
 
         # TODO: Malte/Sebastian: weiss nicht, was dieses checkpoint genau macht.
         #       Vermutlich speichert das Zwischenresultate.
@@ -133,7 +142,8 @@ class AMTNetwork():
 
         # run a training on the data batch.
         # comment AS: to be checked!!!!
-        myLoss = self.amt_net.train_on_batch(features, labels, callbacks=callbacks)
+        #             does not accept callback parameters
+        myLoss = self.model.train_on_batch(features, labels) #, callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
         # Files). Für uns ist das wohl nicht sinnvoll.
