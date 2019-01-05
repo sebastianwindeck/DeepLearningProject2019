@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
 
         base_model = at.to_json()
-        with open("at.json","w") as json_file
+        with open("at.json","w") as json_file:
             json_file.write(base_model)
 
         base_weights = at.save_weights("basemodel.h5")
