@@ -5,7 +5,7 @@ from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.layers import Conv2D, MaxPooling2D, add
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Activation
-from keras.models import Model, load_model
+from keras.models import Model, load_model, model_from_json
 from keras.optimizers import SGD, Adam
 from keras import backend as K
 from keras.utils import plot_model
@@ -217,9 +217,26 @@ class AMTNetwork:
 
         return dif_percent
 
-    def save(self):
+    def save(self, model, modelid):
         # TODO: [Sebastian] Save model to output file after learning
         #Habe was ähnlihces im Main für das base model kann übernommen werden
+        model2save = model.to_json()
+        with open(modelid+".json", "w") as json_file:
+            json_file.write(model2save)
+        # serialize weights to HDF5
+        model.save_weights(modelid+".h5")
+        print("Saved noise trained model", modelid, "to disk")
+
+        # later for calling saved model in next step
+
+        # load json and create model
+        #json_file = open(modelid+'.json', 'r')
+        #loaded_model_json = json_file.read()
+        #json_file.close()
+        #loaded_model = model_from_json(loaded_model_json)
+        # load weights into new model
+        #loaded_model.load_weights(modelid+".h5")
+        #print("Loaded model from disk")
         pass
 
 

@@ -14,7 +14,7 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling2D, Conv2D
 from keras.layers.normalization import BatchNormalization
 
-from keras.models import Sequential, Model, load_model
+from keras.models import Sequential, Model, load_model, model_from_json
 
 from keras.optimizers import Adam, SGD
 
@@ -136,23 +136,38 @@ if __name__ == '__main__':
     #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed.
     #                               Result saved) kerasTrain ->parameter reduzieren]
 
-    # save parameters after initial training
-        base_weights = at.get_weights() #numpy array of all weights
-        cwd = os.getcwd()
-
-        path = cwd + "base_weights"
-        path = os.path.abspath(path)
-        np.save(path, base_weights)
+    # save parameters after initial training [due to: https://machinelearningmastery.com/save-load-keras-deep-learning-models/]
+    # Note: May need to install:
+    # sudo pip install h5py
 
 
+        base_model = at.to_json()
+        with open("at.json","w") as json_file
+            json_file.write(base_model)
 
-    #um parameter aufzurufen
-    #model.set_weights()
+        base_weights = at.save_weights("basemodel.h5")
+        print("saved base_model")
+
+
+        #cwd = os.getcwd()
+
+        #path = cwd + "base_weights"
+        #path = os.path.abspath(path)
+        #np.save(path, base_weights)
+
+
 
     if not train_basemodel:
-        base_weights = np.load(path)
+        json_file = open("at.jason","w")
+        base_model = json_file.read()
+        json_file.close()
+        base_model = model_from_json(base_model)
+        #load weights
+        base_model.load_weights("model.h5")
+        print("loaded model from disk")
 
-    #  Aufrufen Base weights
+
+        #base_weights = np.load(path)
 
     # initialize noiser:
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
