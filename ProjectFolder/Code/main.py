@@ -55,17 +55,18 @@ if __name__ == '__main__':
     # Define a parameter structure args
     args = {# model parameters:
         'model_name': 'baseline',
+        #für init lr geht auch 0.1
         'init_lr': 1e-2,
         'lr_decay': 'linear',
 
         # parameters for audio
-        'sr': 22050,
+        'sr': 16000,
         'spec_type': 'cqt',
         'bin_multiple': 3,
         'residual': 'False',
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
-        'window_size': 7,
+        'window_size': 5,
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
@@ -112,6 +113,7 @@ if __name__ == '__main__':
     # 1. change this, such that the features are calculated on individual snippets of the audio files.
     # 2. leave it as is, and generate/add the noise to the cqt feature files. Use librosa.icqt whenever we want
     #    to "listen" to the noise.
+    #    --> [Malte] I would choose 2.
     # initially, we have decided to go for option 1. However, i propose to stay with option 2, for the following
     # reasons:
     # - it's easier
@@ -122,16 +124,35 @@ if __name__ == '__main__':
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
+
+    train_basemodel = True
+
+    if train_basemodel:
+
     # at.init_amt()
 
     # initial training, with clean data:
-    at.train( inputs, outputs, args['epochs_on_clean'], train_descr='initial')
+        at.train( inputs, outputs, args['epochs_on_clean'], train_descr='initial')
     #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed.
     #                               Result saved) kerasTrain ->parameter reduzieren]
 
     # save parameters after initial training
-    at.save()
-    #   TODO:   [Sebastian] iv.	Save params
+        base_weights = at.get_weights() #numpy array of all weights
+        cwd = os.getcwd()
+
+        path = cwd + "base_weights"
+        path = os.path.abspath(path)
+        np.save(path, base_weights)
+
+
+
+    #um parameter aufzurufen
+    #model.set_weights()
+
+    if not train_basemodel:
+        base_weights = np.load(path)
+
+    #  Aufrufen Base weights
 
     # initialize noiser:
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])

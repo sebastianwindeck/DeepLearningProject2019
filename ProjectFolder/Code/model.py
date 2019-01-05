@@ -6,7 +6,7 @@ from keras.layers import Conv2D, MaxPooling2D, add
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Activation
 from keras.models import Model, load_model
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras import backend as K
 from keras.utils import plot_model
 
@@ -79,6 +79,8 @@ class AMTNetwork:
 
     #def init_amt(self):
         # TODO: [Andreas] define network,
+        #MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        # sigmoid for output layer
 
         inputs = Input(shape=self.input_shape)
         reshape = Reshape(self.input_shape_channels)(inputs)
@@ -107,8 +109,10 @@ class AMTNetwork:
         self.model = Model(inputs=inputs, outputs=outputs)
 
         # TODO [Malte]: Was ist eine passende loss function für AMT?
+        # MT: binary_crossentropy [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         self.model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=self.init_lr, momentum=0.9))
+                      optimizer=Adam(lr=self.init_lr))
+        ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
 
@@ -138,6 +142,7 @@ class AMTNetwork:
         early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         # t = Threshold(valData)
+        #callback speichert zwischenresultate am checkpoint. Brauchen wir nur wenn er abschmiert
         callbacks = [checkpoint, early_stop, decay, csv_logger]
 
         # run a training on the data batch.
@@ -195,17 +200,26 @@ class AMTNetwork:
 
         return output
 
-    def evaluate(self, y_pred, y_true):
+    def evaluate(self, x_new, x_old, y_true, model):
+        #x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
         # TODO: [Malte]
         #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
         #       aufgerufen werden, die dann eine prediction/transcription macht und die Qualität (gem. dem
         #       festgelegten Mass) bestimmt.
+        res_new = model.evaluate(x_new, y_true)
+        res_old = model.evaluate(x_old, y_true)
+        dif = res_new-res_old
+        dif_percent = dif/res_old
+        print("neues Loss",res_new)
+        print("altes Loss",res_old)
+        print("loss has increased by", dif, "absolute")
+        print("loss has increased by", dif_percent, "percent")
 
-        res = 0
-        return res
+        return dif_percent
 
     def save(self):
         # TODO: [Sebastian] Save model to output file after learning
+        #Habe was ähnlihces im Main für das base model kann übernommen werden
         pass
 
 
