@@ -1,26 +1,74 @@
-from keras.models import Model, load_model
+
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.layers import Conv2D, MaxPooling2D, add
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Activation
+from keras.models import Model, load_model
 from keras.optimizers import SGD
 from keras import backend as K
 from keras.utils import plot_model
 import os
 import matplotlib.pyplot as plt
-from ProjectFolder.Code.configuration import load_config
+# AS: not needed
+# from ProjectFolder.Code.configuration import load_config
 
 
+class linear_decay(Callback):
+    '''
+        decay = decay value to subtract each epoch
+    '''
+    def __init__(self, initial_lr,epochs):
+        super(linear_decay, self).__init__()
+        self.initial_lr = initial_lr
+        self.decay = initial_lr/epochs
+
+    def on_epoch_begin(self, epoch, logs={}):
+        new_lr = self.initial_lr - self.decay*epoch
+        print("ld: learning rate is now "+str(new_lr))
+        K.set_value(self.model.optimizer.lr, new_lr)
+
+
+class half_decay(Callback):
+    '''
+        decay = decay value to subtract each epoch
+    '''
+    def __init__(self, initial_lr,period):
+        super(half_decay, self).__init__()
+        self.init_lr = initial_lr
+        self.period = period
+
+    def on_epoch_begin(self, epoch, logs={}):
+        factor = epoch // self.period
+        lr  = self.init_lr / (2**factor)
+        print("hd: learning rate is now "+str(lr))
+        K.set_value(self.model.optimizer.lr, lr)
 
 
 class AMTNetwork():
+    def __init__(self, args):
+        self.bin_multiple = args['bin_multiple']
+        self.max_midi = args['max_midi']
+        self.min_midi = args['min_midi']
+        self.note_range = self.max_midi - self.min_midi
+        self.sr = args['sr']
+        self.hop_length = args['hop_length']
+        self.window_size = args['window_size']
 
-    def __init__(self):
-        # TODO: [Andreas] define network,
-        pass
+        self.feature_bins = self.note_range * self.bin_multiple
+        self.input_shape = (self.window_size, self.feature_bins)
+        self.input_shape_channels = (self.window_size, self.feature_bins, 1)
+
+        self.bins_per_octave = 12 * self.bin_multiple  # should be a multiple of 12
+        self.n_bins = self.note_range * self.bin_multiple
+
+        self.init_lr = args['init_lr']
+        self.lr_decay = args['lr_decay']
+        self.checkpoint_root = args['checkpoint_root']
 
     def init_amt(self):
+        # TODO: [Andreas] define network,
+
         inputs = Input(shape=self.input_shape)
         reshape = Reshape(self.input_shape_channels)(inputs)
 
@@ -43,83 +91,63 @@ class AMTNetwork():
         # fc2 = Dense(200, activation='sigmoid')(do3)
         fc2 = Dense(50, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
-        outputs = Dense(note_range, activation='sigmoid')(do4)
+        outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
         model = Model(inputs=inputs, outputs=outputs)
+
+        # TODO [Malte]: Was ist eine passende loss function für AMT?
         model.compile(loss='binary_crossentropy',
                       optimizer=SGD(lr=self.init_lr, momentum=0.9))
         model.summary()
         plot_model(model, to_file=os.path.join(self.path, 'model.png'))
 
-        self.model_ckpt = os.path.join(self.path, 'ckpt.h5')
         return model
 
-        
 
-    def train(self, data, type):
+    def train(self, features, labels, epochs, train_descr=''):
+        """ Do training on the provided data set.
+
+        """
         # TODO: [Andreas] (based on some data, "clean" or "noisy")
-        path = os.path.join('models', args['model_name'])
-        config = load_config(os.path.join(path, 'config.json'))
-
-        global feature_bins
-        global input_shape
-        global input_shape_channels
-
-        bin_multiple = int(args['bin_multiple'])
-        # changed_AS:
-        # note_range = int(args['max_midi']) - int(args['min_midi']) + 1
-        print('bin multiple', str(np.log2(bin_multiple)))
-        feature_bins = note_range * bin_multiple
-        input_shape = (window_size, feature_bins)
-        input_shape_channels = (window_size, feature_bins, 1)
 
         # filenames
-        model_ckpt = os.path.join(path, 'ckpt.h5')
+        model_ckpt = os.path.join(self.checkpoint_root + train_descr + 'ckpt.h5')
+        csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
 
-        # train params
-        batch_size = 256
-        # epochs = 1000
-        # changed_AS:
-        epochs = 5
-
-        trainGen = DataGen(os.path.join(path, 'data', 'train'), batch_size, args)
-        valGen = DataGen(os.path.join(path, 'data', 'val'), batch_size, args)
-        # valData = load_data(os.path.join(path,'data','val'))
-        
         ###Hier Model aussuchen
+        # comment AS: es gibt nichts auszusuchen?? Nur 1 Modell!
 
-        if os.path.isfile(model_ckpt):
-            print('loading model')
-            model = load_model(model_ckpt)
+        # how does the learning rate change over time?
+        if self.lr_decay == 'linear':
+            decay = linear_decay(self.init_lr, epochs)
         else:
-            model = baseline_model()
+            decay = half_decay(self.init_lr, 5)
 
-        init_lr = float(args['init_lr'])
-
-        model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=init_lr, momentum=0.9))
-        model.summary()
-        plot_model(model, to_file=os.path.join(path, 'model.png'))
-
+        # TODO: Malte/Sebastian: weiss nicht, was dieses checkpoint genau macht.
+        #       Vermutlich speichert das Zwischenresultate.
         checkpoint = ModelCheckpoint(model_ckpt, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
-        # tensorboard = TensorBoard(log_dir='./logs/baseline/', histogram_freq=250, batch_size=batch_size)
-        if args['lr_decay'] == 'linear':
-            decay = linear_decay(init_lr, epochs)
-        else:
-            decay = half_decay(init_lr, 5)
-        csv_logger = CSVLogger(os.path.join(path, 'training.log'))
+
         # t = Threshold(valData)
         callbacks = [checkpoint, early_stop, decay, csv_logger]
 
-        history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
-                                      verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
-                                      callbacks=callbacks)
+        # run a training on the data batch.
+        # comment AS: to be checked!!!!
+        myLoss = self.amt_net.train_on_batch(features, labels, callbacks=callbacks)
 
+        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
+        # Files). Für uns ist das wohl nicht sinnvoll.
+        # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
+        #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
+        #                              callbacks=callbacks)
+
+        # comment AS: some old stuff, from keras_train. not sure whether this works with our training method, and if so
+        # whether this is somehow usefull.
+        '''
         # list all data in history
         print(history.history.keys())
         # summarize history for accuracy
-        '''plt.plot(history.history['acc'])
+        plt.plot(history.history['acc'])
         plt.plot(history.history['val_acc'])
         plt.title('model accuracy')
         plt.ylabel('accuracy')
@@ -127,6 +155,7 @@ class AMTNetwork():
         plt.legend(['train', 'val'], loc='upper left')
         plt.savefig('baseline/acc.png')'''
 
+        '''
         # summarize history for loss
         plt.plot(history.history['loss'])
         plt.plot(history.history['val_loss'])
@@ -136,24 +165,34 @@ class AMTNetwork():
         plt.legend(['train', 'val'], loc='upper left')
         plt.savefig('loss.png')
 
-        pass
-
-    def transcribe(self, data):
-        # TODO: [Andreas] (apply learned network to new data and generate output)
-        output = []
-
-        return output
-
-    def evaluate(self, y_pred, y_true):
-        # TODO: [Andreas]   (compare transcription with “ground truth”)
         # test
         testGen = DataGen(os.path.join(path, 'data', 'test'), batch_size, args)
 
         res = model.evaluate_generator(testGen.next(), steps=testGen.steps())
         print(model.metrics_names)
         print(res)
+        '''
 
-        return
+
+    def transcribe(self, data):
+        """ Apply learned model to data, and return the transcription.
+
+        :param data: new data to be transcribed. Shape is (Nframes, self.window_size, self.feature_bins)
+        :return: predicted transcription. Shape is (Nframes, ...)
+        """
+        # TODO: [Malte] (vermutlich gibt's da eine Funktion "predict" o.ä.)
+        output = []
+
+        return output
+
+    def evaluate(self, y_pred, y_true):
+        # TODO: [Malte]
+        #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
+        #       aufgerufen werden, die dann eine prediction/transcription macht und die Qualität (gem. dem
+        #       festgelegten Mass) bestimmt.
+
+        res = 0
+        return res
 
     def save(self):
         # TODO: [Sebastian] Save model to output file after learning
@@ -161,17 +200,29 @@ class AMTNetwork():
 
 
 class Noiser():
-    # TODO: [Tanos] Create noise machine for several noise types and intensitiy to combine the noise frame by frame to sample
+    # TODO: [Tanos] Create noise machine for several noise types and intensitiy to combine the noise frame by frame to
+    #               sample
 
-    def __init__(self):
-        pass
+    def __init__(self, noise_size, noise_type="simplistic"):
+        self.noise_type = noise_type
+        self.noise_size = noise_size
+        if self.noise_type != 'simplistic':
+            print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
+            # to be changed once we have other noise types...
 
-    def calculator(self):
-        pass
+    def generate(self, n_noise_samples=1):
+        """Generate noise samples.
 
+        The type of the noise that will be generated, and the size of the noise array are defined by the argument given
+        to the constructor.
 
-def featureextraction():
-    # TODO: [Andreas] (basierend auf CQT aus librosa)
-    output = []
+        :param n_noise_samples: The number of noise samples to be generated.
 
-    return output
+        :return: an np.array with the specified noise
+        """
+
+        if self.noise_type == 'simplistic':
+            return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+        else:
+            print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
+            return 0
