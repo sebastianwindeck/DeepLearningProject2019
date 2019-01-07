@@ -228,7 +228,7 @@ class AMTNetwork:
             json_file.write(self.model.to_json())
         # serialize weights to HDF5
         self.model.save_weights(model_path+".h5")
-        print("Saved noise trained model", model_path, "to disk")
+        print("Saved trained model to disk: ", model_path)
 
     def load(self, model_path):
         # load json and create model

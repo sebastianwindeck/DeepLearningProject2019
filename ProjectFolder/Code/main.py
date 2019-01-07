@@ -90,7 +90,7 @@ if __name__ == '__main__':
         # - directory to store checkpoint files. All files are stored in this directory:
         'checkpoint_root': os.path.join(proj_root, 'Checkpoints', \
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
-
+        'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
         'maxFramesPerFile': 20,  # set to -1 to ignore
         'maxFrames': 50         # set to -1 to ignore
@@ -107,6 +107,11 @@ if __name__ == '__main__':
         print("WARNING: Checkpoint root directory already exists!!")
     else:
         os.mkdir(args['checkpoint_root'])
+
+    if os.path.exists(args['basemodel_root']):
+        print("WARNING: Basemodel root directory already exists!!")
+    else:
+        os.mkdir(args['basemodel_root'])
 
     #   TODO:   [Andreas]   ii. CQT calculate [advTrain]
     # comment AS: Currently, this calculates the features directly from the .wav files. I see two options:
@@ -135,21 +140,9 @@ if __name__ == '__main__':
 
     # initial training, with clean data:
         at.train( inputs, outputs, args['epochs_on_clean'], train_descr='initial')
-    #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed.
-    #                               Result saved) kerasTrain ->parameter reduzieren]
-    # save parameters after initial training [due to: https://machinelearningmastery.com/save-load-keras-deep-learning-models/]
-    # Note: May need to install:
-    # sudo pip install h5py
-
-        at.save(args[''])
-
-        base_model = at.to_json()
-        with open("at.json","w") as json_file:
-            json_file.write(base_model)
-
-        base_weights = at.save_weights("basemodel.h5")
-        print("saved base_model")
-
+    #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed. Result saved)
+        baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
+        at.save(baseModelPath)
 
         #cwd = os.getcwd()
 
@@ -157,17 +150,8 @@ if __name__ == '__main__':
         #path = os.path.abspath(path)
         #np.save(path, base_weights)
 
-
-
     if not train_basemodel:
-        json_file = open("at.json","w")
-        base_model = json_file.read()
-        json_file.close()
-        base_model = model_from_json(base_model)
-        #load weights
-        base_model.load_weights("model.h5")
-        print("loaded model from disk")
-
+        at.load(baseModelPath)
 
         #base_weights = np.load(path)
 
