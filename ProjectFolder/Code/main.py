@@ -114,6 +114,7 @@ if __name__ == '__main__':
     # 2. leave it as is, and generate/add the noise to the cqt feature files. Use librosa.icqt whenever we want
     #    to "listen" to the noise.
     #    --> [Malte] I would choose 2.
+    #    --> [Sebastian] I would also choose 2.
     # initially, we have decided to go for option 1. However, i propose to stay with option 2, for the following
     # reasons:
     # - it's easier
@@ -129,17 +130,18 @@ if __name__ == '__main__':
 
     if train_basemodel:
 
+    # comment SW:   Andreas what do you think do we need an additional init_amt function?
     # at.init_amt()
 
     # initial training, with clean data:
         at.train( inputs, outputs, args['epochs_on_clean'], train_descr='initial')
     #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed.
     #                               Result saved) kerasTrain ->parameter reduzieren]
-
     # save parameters after initial training [due to: https://machinelearningmastery.com/save-load-keras-deep-learning-models/]
     # Note: May need to install:
     # sudo pip install h5py
 
+        at.save(args[''])
 
         base_model = at.to_json()
         with open("at.json","w") as json_file:
@@ -158,7 +160,7 @@ if __name__ == '__main__':
 
 
     if not train_basemodel:
-        json_file = open("at.jason","w")
+        json_file = open("at.json","w")
         base_model = json_file.read()
         json_file.close()
         base_model = model_from_json(base_model)
