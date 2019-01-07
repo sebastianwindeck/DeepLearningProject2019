@@ -108,8 +108,8 @@ class AMTNetwork:
 
         self.model = Model(inputs=inputs, outputs=outputs)
 
-        # TODO [Malte]: Was ist eine passende loss function für AMT?
-        # MT: binary_crossentropy [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        # MT: the best loss function for AMT binary_crossentropy according to 
+        # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         self.model.compile(loss='binary_crossentropy',
                       optimizer=Adam(lr=self.init_lr))
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
@@ -124,11 +124,8 @@ class AMTNetwork:
         # TODO: [Andreas] (based on some data, "clean" or "noisy")
 
         # filenames
-        model_ckpt = os.path.join(self.checkpoint_root + train_descr + 'ckpt.h5')
+        model_ckpt = os.path.join(self.checkpoint_root + train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
-
-        ###Hier Model aussuchen
-        # comment AS: es gibt nichts auszusuchen?? Nur 1 Modell!
 
         # how does the learning rate change over time?
         if self.lr_decay == 'linear':
@@ -136,18 +133,22 @@ class AMTNetwork:
         else:
             decay = HalfDecay(self.init_lr, 5)
 
-        # TODO: Malte/Sebastian: weiss nicht, was dieses checkpoint genau macht.
-        #       Vermutlich speichert das Zwischenresultate.
-        checkpoint = ModelCheckpoint(model_ckpt, monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
+        #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
+        #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{val_loss:.2f}.h5',
+                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+        checkpoint_nth =  ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{val_loss:.2f}.h5',
+                                          monitor='val_loss', verbose=1, mode='min', period=10)
         early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         # t = Threshold(valData)
-        #callback speichert zwischenresultate am checkpoint. Brauchen wir nur wenn er abschmiert
-        callbacks = [checkpoint, early_stop, decay, csv_logger]
+        callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
         # run a training on the data batch.
         # comment AS: to be checked!!!!
         #             does not accept callback parameters
+        # comment SW: why use train_on_batch --> better use fit with callback and other params
         myLoss = self.model.train_on_batch(features, labels) #, callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
@@ -217,27 +218,31 @@ class AMTNetwork:
 
         return dif_percent
 
-    def save(self, model, modelid):
-        # TODO: [Sebastian] Save model to output file after learning
-        #Habe was ähnlihces im Main für das base model kann übernommen werden
-        model2save = model.to_json()
-        with open(modelid+".json", "w") as json_file:
-            json_file.write(model2save)
+    def save(self, model_path):
+        """
+        :param model_path: String
+        :type model: keras.Model
+        """
+
+        with open(model_path+".json", "w") as json_file:
+            json_file.write(self.model.to_json())
         # serialize weights to HDF5
-        model.save_weights(modelid+".h5")
-        print("Saved noise trained model", modelid, "to disk")
+        self.model.save_weights(model_path+".h5")
+        print("Saved noise trained model", model_path, "to disk")
 
-        # later for calling saved model in next step
-
+    def load(self, model_path):
         # load json and create model
-        #json_file = open(modelid+'.json', 'r')
-        #loaded_model_json = json_file.read()
-        #json_file.close()
-        #loaded_model = model_from_json(loaded_model_json)
+        json_file = open(model_path+'.json', 'r')
+        json = json_file.read()
+        json_file.close()
+        loaded_model = model_from_json(json)
         # load weights into new model
-        #loaded_model.load_weights(modelid+".h5")
-        #print("Loaded model from disk")
-        pass
+        loaded_model.load_weights(model_path+".h5")
+        print("Loaded model from disk")
+        self.model = loaded_model
+        # TODO: [Andreas] Sollte das laden des Modells gleich das Compilieren beinhalten?
+        # Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+
 
 
 class Noiser():
