@@ -26,7 +26,7 @@ def extract_features(audio_filename, args):
     :param args: a dictionary containing the parameters. This function needs the parameters 'featType'
     :return: an np.ndarray with the requested features. shape[0] is the time dimension
     """
-    print("extract_features")
+    print("Extract_features")
     spec_type = args['spec_type']
 
     if spec_type == 'cqt':
