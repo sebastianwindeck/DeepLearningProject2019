@@ -187,9 +187,7 @@ if __name__ == '__main__':
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
-        at.train( inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter'+str(noiseEpoch))
-
-        # TODO:   [Sebastian ] Naming conventino für wievielte Noise-interation muss eingebaut werden.
+        at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_'+str(noiseEpoch))
 
     # end for noiseEpoch in range(args['noise_epochs'])
 
