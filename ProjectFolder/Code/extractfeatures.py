@@ -3,11 +3,7 @@ import numpy as np
 import os
 import pretty_midi
 
-# TODO: [Tanos] Copy and configurate the inputs and outputs
-#               1. input for .mid
-#               2. input for .wav
-#               3. creation of .wav files
-#                   Please add missing methods concerning the inputs or outputs
+# TODO [Andreas]: create .wav from "noise cqt" features
 
 # Andreas: Habe hier die Funktionen zum Einlesen der Daten und zur Extraktion der cqt-Features eingefügt (das meiste ist
 #          kopiert / adaptiert aus advTrain

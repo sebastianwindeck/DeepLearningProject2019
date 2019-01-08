@@ -79,7 +79,6 @@ class AMTNetwork:
         self.checkpoint_root = args['checkpoint_root']
 
     #def init_amt(self):
-        # TODO: [Andreas] define network,
         #MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
 
@@ -122,7 +121,6 @@ class AMTNetwork:
         """ Do training on the provided data set.
 
         """
-        # TODO: [Andreas] (based on some data, "clean" or "noisy")
 
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root + train_descr)
@@ -141,8 +139,8 @@ class AMTNetwork:
         # TODO: [Sebastian] implement data split with val_data
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{loss:.2f}.h5',
                                           monitor='loss', verbose=1, save_best_only=True, mode='min')
-        checkpoint_nth =  ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
-                                          monitor='loss', verbose=1, mode='min', period=10)
+        checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
+                                         monitor='loss', verbose=1, mode='min', period=10)
         early_stop = EarlyStopping(patience=5, monitor='loss', verbose=1, mode='min')
 
         # t = Threshold(valData)
@@ -202,7 +200,6 @@ class AMTNetwork:
 
     def evaluation(self, x_new, x_old, y_true, model):
         #x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
-        # TODO: [Malte]
         #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
         #       aufgerufen werden, die dann eine prediction/transcription macht und die Qualität (gem. dem
         #       festgelegten Mass) bestimmt.
@@ -239,14 +236,16 @@ class AMTNetwork:
         loaded_model.load_weights(model_path+".h5")
         print("Loaded model from disk")
         self.model = loaded_model
-        # TODO: [Andreas] Sollte das laden des Modells gleich das Compilieren beinhalten?
+        self.model.compile(loss='binary_crossentropy',
+                           optimizer=Adam(lr=self.init_lr))
+        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
         # Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 
 class Noiser():
-    # TODO: [Tanos] Create noise machine for several noise types and intensitiy to combine the noise frame by frame to
-    #               sample
+    # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
+    #               Start with Gaussian (=white), brown, pink etc.
 
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type

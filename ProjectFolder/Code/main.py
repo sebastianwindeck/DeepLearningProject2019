@@ -51,7 +51,6 @@ if __name__ == '__main__':
 
     proj_root = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), '..')
 
-    #   TODO:   [all]       i. Init everything, namely: noise level
     # Define a parameter structure args
     args = {# model parameters:
         'model_name': 'baseline',
@@ -113,7 +112,6 @@ if __name__ == '__main__':
     else:
         os.mkdir(args['basemodel_root'])
 
-    #   TODO:   [Andreas]   ii. CQT calculate [advTrain]
     # comment AS: Currently, this calculates the features directly from the .wav files. I see two options:
     # 1. change this, such that the features are calculated on individual snippets of the audio files.
     # 2. leave it as is, and generate/add the noise to the cqt feature files. Use librosa.icqt whenever we want
@@ -126,6 +124,7 @@ if __name__ == '__main__':
     # - it's already implemented (hence also easier to compare with literature results)
     # - samples of approx. 32ms are anyway to short to listen to.
     # - icqt is not perfect, but should be sufficiently good to describe e.g. the frequency distribution of the noise.
+    # => ANGENOMMEN
     inputs, outputs, datapath = prepareData(args)
 
     # initialize the amt model, and do an initial training
@@ -135,12 +134,9 @@ if __name__ == '__main__':
 
     if train_basemodel:
 
-    # comment SW:   Andreas what do you think do we need an additional init_amt function?
-    # at.init_amt()
-
     # initial training, with clean data:
         at.train( inputs, outputs, epochs = args['epochs_on_clean'], train_descr='initial')
-    #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed. Result saved)
+
         baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
         at.save(baseModelPath)
 
@@ -168,17 +164,19 @@ if __name__ == '__main__':
         #             und die Intensität separat kontrollieren können. Wenn wir neues Noise mit neuer Intensität
         #             generieren wissen wir nachher nicht, ob die Veränderung jetzt auf die neue Noise-instanz,
         #             auf die veränderte Intensität, oder auf beides zusammen zurückzuführen ist.
+        # => ANGENOMMEN
 
-        # incices of data samples to be noised.
+        # indices of data samples to be noised.
         idx = np.random.randint(0, inputs.shape[0], args['noise_frames_per_epoch'])
         noise_level = args['noise_initial_level']
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[None, idx] + noise_level * this_noise
-            # c.	CQT
-            # TODO: calculate CQT based on noisy_X. decide whether we work with cqt values of waveforms...
 
             #  TODO: d.	Evaluate performance of classifier based on noise candidate
+            #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
+            #
+
             classi_perf = 0.42
             if classi_perf > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
@@ -194,17 +192,17 @@ if __name__ == '__main__':
             # => Exit the while loop and train the amt with the new noisy data
             break
 
-        # TODO: i.	Break -> save Noise audio file
+        # TODO:  [Malte]:  i.	Break -> save Noise file (this is not an audio file!!)
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
-        # TODO: probably needs some refinements
+        # TODO: probably needs some refinements => look ok for now.
         at.train( inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter'+str(noiseEpoch))
 
-        # TODO:   [Tanos]   3.	Save intermediate results
+        # TODO:   [Sebastian ] Naming conventino für wievielte Noise-interation muss eingebaut werden.
 
     # end for noiseEpoch in range(args['noise_epochs'])
 
-#   TODO:   [all]       vi.	Overall eval:
+#   TODO:   [Sebastian]   vi.	Overall eval:
 #                           1.	F1 score compared to noise level
 #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
 

@@ -12,12 +12,12 @@ from sklearn.metrics import confusion_matrix
 
 def final_score(y_pred, y_true):
     # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision
+    #                   distribution / histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
     pass
 
 
 def pitch_confusion(y_pred, y_true, type='heat'):
-    # TODO: [Sebastian] Create a confusion matrix to get the confusion of pitches over a song
     _true = []
     _pred = []
     sample_weight = []
