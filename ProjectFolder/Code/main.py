@@ -44,7 +44,7 @@ import io  # has function prepareData(args)
 
 import datetime
 
-from ProjectFolder.Code.io import prepareData
+from ProjectFolder.Code.extractfeatures import prepareData
 from ProjectFolder.Code.model import Noiser, AMTNetwork
 
 if __name__ == '__main__':
