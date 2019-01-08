@@ -136,19 +136,15 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{val_loss:.2f}.h5',
-                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-        checkpoint_nth =  ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{val_loss:.2f}.h5',
-                                          monitor='val_loss', verbose=1, mode='min', period=10)
-        early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{loss:.2f}.h5',
+                                          monitor='loss', verbose=1, save_best_only=True, mode='min')
+        checkpoint_nth =  ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
+                                          monitor='loss', verbose=1, mode='min', period=10)
+        early_stop = EarlyStopping(patience=5, monitor='loss', verbose=1, mode='min')
 
         # t = Threshold(valData)
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        # run a training on the data batch.
-        # comment AS: to be checked!!!!
-        #             does not accept callback parameters
-        # comment SW: why use train_on_batch --> better use fit with callback and other params
         myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
