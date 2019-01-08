@@ -149,7 +149,7 @@ class AMTNetwork:
         # comment AS: to be checked!!!!
         #             does not accept callback parameters
         # comment SW: why use train_on_batch --> better use fit with callback and other params
-        myLoss = self.model.train_on_batch(features, labels) #, callbacks=callbacks)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
         # Files). Für uns ist das wohl nicht sinnvoll.
