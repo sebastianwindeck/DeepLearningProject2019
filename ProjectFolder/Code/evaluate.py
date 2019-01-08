@@ -27,7 +27,10 @@ def pitch_confusion(y_pred, y_true, type='heat'):
     # number of pred notes per time steps
     pred_count = np.count_nonzero(y_pred, axis=1)
     # ratio of true count to pred count
-    pred_weight = np.divide(true_count, pred_count, dtype=int)
+    pred_weight = np.divide(true_count, pred_count)
+    pred_weight[pred_weight == np.inf] = 1
+    pred_weight[pred_weight == 0] = 1
+    print(pred_weight)
     if not len(true_count) == len(pred_count):
         print("Warning evaluation will collapse due to different lenth of predicted and true label.")
 
@@ -37,10 +40,9 @@ def pitch_confusion(y_pred, y_true, type='heat'):
         ix_p = np.isin(y_pred[i], 1)
         print(ix_p)
         print(np.where(ix_p))
-        ind_p = np.where(ix_p)[1]
+        ind_p = np.where(ix_p)[0]
         ix_t = np.isin(y_true[i], 1)
-        print(np.where(ix_p))
-        ind_t = np.where(ix_t)[1]
+        ind_t = np.where(ix_t)[0]
 
         # find right classified pitches
         classified = list(set(ind_t).intersection(set(ind_p)))
@@ -56,11 +58,11 @@ def pitch_confusion(y_pred, y_true, type='heat'):
 
         j = 0
         while j < len(classified):
-            sample_weight.extend(np.minimum(pred_weight[i], 1))
+            sample_weight.append(np.minimum(pred_weight[i], 1))
             j = +1
 
-        # Case 1: perfect
-        if len(classified) == 0 and len(misclassified) == 0:
+        # Case 1: perfect silence
+        if len(classified) == 0 and len(misclassified) == 0 and len(missed) == 0:
             perm = []
             weight = 0
         # Case 2: to many predictions
@@ -102,4 +104,5 @@ def pitch_confusion(y_pred, y_true, type='heat'):
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
 
+    print("Confusion Matrix done.")
     plt.show()
