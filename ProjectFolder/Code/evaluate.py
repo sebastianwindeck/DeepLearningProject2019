@@ -44,11 +44,11 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
         ind_t = np.where(ix_t)[0]
 
         # find right classified pitches
-        classified = list(set(ind_t).intersection(set(ind_p)))
+        classified = np.intersect1d(ind_t, ind_p)
         # find missed pitches
-        missed = list(set(ind_t) - set(ind_p))
+        missed = np.setdiff1d(ind_t,ind_p)
         # find misclassified pitches
-        misclassified = list(set(ind_p) - set(ind_t))
+        misclassified = np.setdiff1d(ind_p,ind_t)
 
         # Add classified pitches
         weight = 0
