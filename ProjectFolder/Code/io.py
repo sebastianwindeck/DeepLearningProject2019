@@ -80,7 +80,7 @@ def extract_features(audio_filename, args):
 
 
 def mid2outputnp(pm_mid, times, args):
-    """ 
+    """
     :param pm_mid: object
     :param times: int
     :param args: kwargs**

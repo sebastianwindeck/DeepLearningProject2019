@@ -79,7 +79,7 @@ def pitch_confusion(y_pred, y_true, type='heat'):
                 weight = len(missed) / len(classified)
             else:
                 weight = 1
-        # Case 4: to few predictions
+        # Case 4: both missed and misclassified
         elif len(missed) > 0 and len(misclassified) > 0:
             perm = list(itertools.product(missed, misclassified))
             weight = len(missed) / len(misclassified)
