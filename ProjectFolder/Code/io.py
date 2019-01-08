@@ -80,7 +80,11 @@ def extract_features(audio_filename, args):
 
 
 def mid2outputnp(pm_mid, times, args):
-    """ TODO: Add comment
+    """ 
+    :param pm_mid: object
+    :param times: int
+    :param args: kwargs**
+    :return: The full piano roll
     """
     max_midi = args['max_midi']
     min_midi = args['min_midi']
