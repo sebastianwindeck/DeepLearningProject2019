@@ -131,25 +131,16 @@ if __name__ == '__main__':
     at = AMTNetwork(args)
 
     train_basemodel = True
-
+    baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
     if train_basemodel:
 
     # initial training, with clean data:
         at.train( inputs, outputs, epochs = args['epochs_on_clean'], train_descr='initial')
 
-        baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
         at.save(baseModelPath)
-
-        #cwd = os.getcwd()
-
-        #path = cwd + "base_weights"
-        #path = os.path.abspath(path)
-        #np.save(path, base_weights)
 
     if not train_basemodel:
         at.load(baseModelPath)
-
-        #base_weights = np.load(path)
 
     # initialize noiser:
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
