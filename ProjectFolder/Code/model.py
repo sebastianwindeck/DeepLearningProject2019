@@ -201,7 +201,7 @@ class AMTNetwork:
 
         return output
 
-    def evaluate(self, x_new, x_old, y_true, model):
+    def evaluation(self, x_new, x_old, y_true, model):
         #x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
         # TODO: [Malte]
         #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
