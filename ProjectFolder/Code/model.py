@@ -65,6 +65,7 @@ class AMTNetwork:
         self.sr = args['sr']
         self.hop_length = args['hop_length']
         self.window_size = args['window_size']
+        self.epochs = args['epochs_on_clean']
 
         self.feature_bins = args['feature_bins']
         self.input_shape = args['input_shape']
@@ -117,7 +118,7 @@ class AMTNetwork:
         plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
 
 
-    def train(self, features, labels, epochs, train_descr=''):
+    def train(self, features, labels, epochs = 1000, train_descr=''):
         """ Do training on the provided data set.
 
         """
@@ -126,6 +127,7 @@ class AMTNetwork:
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root + train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
+
 
         # how does the learning rate change over time?
         if self.lr_decay == 'linear':
@@ -145,7 +147,7 @@ class AMTNetwork:
         # t = Threshold(valData)
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs = epochs)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
         # Files). Für uns ist das wohl nicht sinnvoll.

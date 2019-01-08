@@ -139,7 +139,7 @@ if __name__ == '__main__':
     # at.init_amt()
 
     # initial training, with clean data:
-        at.train( inputs, outputs, args['epochs_on_clean'], train_descr='initial')
+        at.train( inputs, outputs, epochs = args['epochs_on_clean'], train_descr='initial')
     #   TODO:	[Sebastian] iii. Train base model (for a given number of epochs, with intermed. Result saved)
         baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
         at.save(baseModelPath)
