@@ -11,16 +11,18 @@ from sklearn.metrics import confusion_matrix
 
 
 def final_score(y_pred, y_true):
+
+    if not y_pred.shape == y_true.shape:
+        print("Warning y_pred and y_true do not have the same shape please set other ")
     # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision
     #                   distribution / histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
     pass
 
 
-def pitch_confusion(y_pred, y_true, type='heat'):
-    _true = []
-    _pred = []
-    sample_weight = []
+def pitch_confusion(y_pred, y_true, vtype='heat'):
+    data = np.zeros((y_pred.shape[1],y_true.shape[1]))
+
     # compare pred with true
     # number of true notes per time steps
     true_count = np.count_nonzero(y_true, axis=1)
@@ -30,16 +32,13 @@ def pitch_confusion(y_pred, y_true, type='heat'):
     pred_weight = np.divide(true_count, pred_count)
     pred_weight[pred_weight == np.inf] = 1
     pred_weight[pred_weight == 0] = 1
-    print(pred_weight)
     if not len(true_count) == len(pred_count):
-        print("Warning evaluation will collapse due to different lenth of predicted and true label.")
+        print("Warning evaluation will collapse due to different length of predicted and true labels.")
 
     for i in range(y_pred.shape[0]):
-
+        print(i)
         # Identify the notes on the piano roll
         ix_p = np.isin(y_pred[i], 1)
-        print(ix_p)
-        print(np.where(ix_p))
         ind_p = np.where(ix_p)[0]
         ix_t = np.isin(y_true[i], 1)
         ind_t = np.where(ix_t)[0]
@@ -52,13 +51,11 @@ def pitch_confusion(y_pred, y_true, type='heat'):
         misclassified = list(set(ind_p) - set(ind_t))
 
         # Add classified pitches
-        _true.extend(classified)
-        _pred.extend(classified)
         weight = 0
 
         j = 0
         while j < len(classified):
-            sample_weight.append(np.minimum(pred_weight[i], 1))
+            data[classified[j], classified[j]] += np.minimum(pred_weight[i], 1)
             j = +1
 
         # Case 1: perfect silence
@@ -85,22 +82,22 @@ def pitch_confusion(y_pred, y_true, type='heat'):
             weight = len(missed) / len(misclassified)
 
         for item in perm:
-            _true.append(item[0])
-            _pred.append(item[1])
-            sample_weight.append(weight)
 
-    data = confusion_matrix(y_true=_true, y_pred=_pred, sample_weight=sample_weight)
+            data[item[0], item[1]] += weight
 
     # visualize data
-    if type == 'heat':
+    true = []
+    pred = []
+    matrix_weight = []
+    if vtype == 'heat':
         sns.heatmap(data=data)
-    elif type == 'cluster':
+    elif vtype == 'cluster':
         sns.clustermap(data=data)
-    elif type == 'joint':
-        sns.jointplot(x=_true, y=_pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
+    elif vtype == 'joint':
+        sns.jointplot(x=true, y=pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
             .set_axis_labels("True", "Pred")
-    elif type == 'scatter':
-        sns.scatterplot(x=_true, y=_pred, size=sample_weight)
+    elif vtype == 'scatter':
+        sns.scatterplot(x=true, y=pred, size=matrix_weight)
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
