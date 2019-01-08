@@ -97,7 +97,8 @@ def pitch_confusion(y_pred, y_true, type='heat'):
     elif type == 'cluster':
         sns.clustermap(data=data)
     elif type == 'joint':
-        sns.jointplot(x=_true, y=_pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels("True", "Pred")
+        sns.jointplot(x=_true, y=_pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
+            .set_axis_labels("True", "Pred")
     elif type == 'scatter':
         sns.scatterplot(x=_true, y=_pred, size=sample_weight)
     else:
