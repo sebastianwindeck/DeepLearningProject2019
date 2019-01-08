@@ -78,7 +78,6 @@ class AMTNetwork:
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
 
-    #def init_amt(self):
         #MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
 
@@ -116,7 +115,6 @@ class AMTNetwork:
         self.model.summary()
         plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
 
-
     def train(self, features, labels, epochs = 1000, train_descr=''):
         """ Do training on the provided data set.
 
@@ -136,17 +134,16 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        # TODO: [Sebastian] implement data split with val_data
-        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{loss:.2f}.h5',
-                                          monitor='loss', verbose=1, save_best_only=True, mode='min')
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{val_loss:.2f}.h5',
+                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
-                                         monitor='loss', verbose=1, mode='min', period=10)
-        early_stop = EarlyStopping(patience=5, monitor='loss', verbose=1, mode='min')
+                                         monitor='val_loss', verbose=1, mode='min', period=10)
+        early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         # t = Threshold(valData)
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs = epochs)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, validation_split=0.1)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
         # Files). Für uns ist das wohl nicht sinnvoll.
