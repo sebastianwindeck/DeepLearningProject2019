@@ -86,11 +86,11 @@ class AMTNetwork:
         reshape = Reshape(self.input_shape_channels)(inputs)
 
         # normal convnet layer (have to do one initially to get 64 channels)
-        conv1 = Conv2D(50, (5, 25), activation='relu')(reshape)
+        conv1 = Conv2D(50, (5, 25), activation='relu', padding='valid', data_format="channels_last")(reshape)
         do1 = Dropout(0.5)(conv1)
         pool1 = MaxPooling2D(pool_size=(1, 3))(do1)
 
-        conv2 = Conv2D(50, (3, 5), activation='relu')(pool1)
+        conv2 = Conv2D(50, (3, 5), activation='relu', padding='valid', data_format="channels_last")(pool1)
         do2 = Dropout(0.5)(conv2)
         pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
 
