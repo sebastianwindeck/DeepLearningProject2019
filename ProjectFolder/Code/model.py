@@ -136,7 +136,6 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        # TODO: [Sebastian] implement data split with val_data
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{loss:.2f}.h5',
                                           monitor='loss', verbose=1, save_best_only=True, mode='min')
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
@@ -146,7 +145,7 @@ class AMTNetwork:
         # t = Threshold(valData)
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs = epochs)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs = epochs, validation_split=0.1)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
         # Files). Für uns ist das wohl nicht sinnvoll.
