@@ -1,4 +1,3 @@
-
 from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
@@ -22,6 +21,8 @@ import sklearn
 from sklearn.metrics import precision_recall_fscore_support
 
 import matplotlib.pyplot as plt
+
+
 # AS: not needed
 # from ProjectFolder.Code.configuration import load_config
 
@@ -29,14 +30,14 @@ import matplotlib.pyplot as plt
 class LinearDecay(Callback):
     # Define a linear pattern for the decay of the learning rate.
 
-    def __init__(self, initial_lr,epochs):
+    def __init__(self, initial_lr, epochs):
         super(LinearDecay, self).__init__()
         self.initial_lr = initial_lr
-        self.decay = initial_lr/epochs
+        self.decay = initial_lr / epochs
 
     def on_epoch_begin(self, epoch, logs={}):
-        new_lr = self.initial_lr - self.decay*epoch
-        print("ld: learning rate is now "+str(new_lr))
+        new_lr = self.initial_lr - self.decay * epoch
+        print("ld: learning rate is now " + str(new_lr))
         K.set_value(self.model.optimizer.lr, new_lr)
 
 
@@ -44,15 +45,15 @@ class HalfDecay(Callback):
     # currently not used. Was copied from keras_train.py (but not used there neither)
     # -> can probably be deleted.
 
-    def __init__(self, initial_lr,period):
+    def __init__(self, initial_lr, period):
         super(HalfDecay, self).__init__()
         self.init_lr = initial_lr
         self.period = period
 
     def on_epoch_begin(self, epoch, logs={}):
         factor = epoch // self.period
-        lr  = self.init_lr / (2**factor)
-        print("hd: learning rate is now "+str(lr))
+        lr = self.init_lr / (2 ** factor)
+        print("hd: learning rate is now " + str(lr))
         K.set_value(self.model.optimizer.lr, lr)
 
 
@@ -78,7 +79,7 @@ class AMTNetwork:
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
 
-        #MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        # MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
 
         inputs = Input(shape=self.input_shape)
@@ -109,13 +110,12 @@ class AMTNetwork:
 
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        self.model.compile(loss='binary_crossentropy',
-                      optimizer=Adam(lr=self.init_lr))
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr))
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
 
-    def train(self, features, labels, epochs = 1000, train_descr=''):
+    def train(self, features, labels, epochs=1000, train_descr=''):
         """ Do training on the provided data set.
 
         """
@@ -123,7 +123,6 @@ class AMTNetwork:
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root + train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
-
 
         # how does the learning rate change over time?
         if self.lr_decay == 'linear':
@@ -136,11 +135,10 @@ class AMTNetwork:
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{val_loss:.2f}.h5',
                                           monitor='val_loss', verbose=1, save_best_only=True, mode='min')
-        checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5',
-                                         monitor='val_loss', verbose=1, mode='min', period=10)
+        checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
+                                         verbose=1, mode='min', period=10)
         early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
-        # t = Threshold(valData)
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
         myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, validation_split=0.1)
@@ -183,7 +181,6 @@ class AMTNetwork:
         print(res)
         '''
 
-
     def transcribe(self, data):
         """ Apply learned model to data, and return the transcription.
 
@@ -196,16 +193,17 @@ class AMTNetwork:
         return output
 
     def evaluation(self, x_new, x_old, y_true, model):
-        #x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
+        # x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
         #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
         #       aufgerufen werden, die dann eine prediction/transcription macht und die Qualität (gem. dem
         #       festgelegten Mass) bestimmt.
+        # comment SW:   TODO: [Malte] du hast einen Parameter model ist es nicht besser sich auf self.model zu beziehen.
         res_new = model.evaluate(x_new, y_true)
         res_old = model.evaluate(x_old, y_true)
-        dif = res_new-res_old
-        dif_percent = dif/res_old
-        print("neues Loss",res_new)
-        print("altes Loss",res_old)
+        dif = res_new - res_old
+        dif_percent = dif / res_old
+        print("neues Loss", res_new)
+        print("altes Loss", res_old)
         print("loss has increased by", dif, "absolute")
         print("loss has increased by", dif_percent, "percent")
 
@@ -217,27 +215,24 @@ class AMTNetwork:
         :type model: keras.Model
         """
 
-        with open(model_path+".json", "w") as json_file:
+        with open(model_path + ".json", "w") as json_file:
             json_file.write(self.model.to_json())
         # serialize weights to HDF5
-        self.model.save_weights(model_path+".h5")
+        self.model.save_weights(model_path + ".h5")
         print("Saved trained model to disk: ", model_path)
 
     def load(self, model_path):
         # load json and create model
-        json_file = open(model_path+'.json', 'r')
+        json_file = open(model_path + '.json', 'r')
         json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(json)
         # load weights into new model
-        loaded_model.load_weights(model_path+".h5")
+        loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
         self.model = loaded_model
-        self.model.compile(loss='binary_crossentropy',
-                           optimizer=Adam(lr=self.init_lr))
-        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
-        # Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
-
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(
+            lr=self.init_lr))  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  # Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 class Noiser():
@@ -248,8 +243,8 @@ class Noiser():
         self.noise_type = noise_type
         self.noise_size = noise_size
         if self.noise_type != 'simplistic':
-            print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
-            # to be changed once we have other noise types...
+            print(
+                "WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")  # to be changed once we have other noise types...
 
     def generate(self, n_noise_samples=1):
         """Generate noise samples.
