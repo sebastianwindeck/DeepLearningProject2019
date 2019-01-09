@@ -20,6 +20,7 @@ def final_score(y_pred, y_true):
 
 
 def pitch_confusion(y_pred, y_true, vtype='heat'):
+    global perm
     data = np.zeros((y_pred.shape[1], y_true.shape[1]))
 
     # compare pred with true
@@ -81,15 +82,23 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
         for row in perm:
             data[row[0], row[1]] += weight
 
+    # denumerate data matrix in 2d indices combination with value
+
+    xx, yy = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
+    data_v = np.vstack((xx.ravel(), yy.ravel(), data.ravel())).T
+    data_v = np.delete(data_v, np.where(data_v[:, 2] == 0), axis=0)
+
     # visualize data
+
     if vtype == 'heat':
         sns.heatmap(data=data)
     elif vtype == 'cluster':
         sns.clustermap(data=data)
     elif vtype == 'joint':
-        sns.jointplot(x=true, y=pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels("True", "Pred")
+        sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels(
+            "True", "Pred")
     elif vtype == 'scatter':
-        sns.scatterplot(x=true, y=pred, size=matrix_weight)
+        sns.scatterplot(x=data_v[:, 0], y=data_v[:, 1], size=data_v[:, 2])
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
