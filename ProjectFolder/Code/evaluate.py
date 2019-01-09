@@ -1,9 +1,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
-import itertools
-from sklearn.metrics import confusion_matrix
-
+from sklearn.metrics import classification_report
 
 # Comment AS: die Funktionen sind sinnvoll; tendenziell sollten wir die aber nur für die "end-Auswertung" brauchen. Fürs
 # Bewerten der Noise-Kandidaten können wir evtl. direkt eine evaluate-Funktion des Modells (aus Keras) nutzen.
@@ -13,6 +11,19 @@ from sklearn.metrics import confusion_matrix
 def final_score(y_pred, y_true):
     if not y_pred.shape == y_true.shape:
         print("Warning y_pred and y_true do not have the same shape please set other ")
+
+    # compare pred with true
+    # number of true notes per time steps
+    true_count = np.count_nonzero(y_true, axis=1)
+    # number of pred notes per time steps
+    pred_count = np.count_nonzero(y_pred, axis=1)
+
+    for i in np.arange(np.amax(true_count)):
+        print("Report for ", i)
+        print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
+
+
+
     # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision distribution /
     # histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
@@ -104,4 +115,5 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
               "Please select either 'heat' or 'cluster' for type.")
 
     print("Confusion Matrix done.")
+    # TODO: [Sebastian] Save as png
     plt.show()
