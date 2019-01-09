@@ -18,7 +18,7 @@ def final_score(y_pred, y_true):
     # number of pred notes per time steps
     pred_count = np.count_nonzero(y_pred, axis=1)
 
-    for i in np.arange(np.amax(true_count)):
+    for i in np.unique(true_count):
         print("Report for ", i)
         print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
 
@@ -30,7 +30,7 @@ def final_score(y_pred, y_true):
     pass
 
 
-def pitch_confusion(y_pred, y_true, vtype='heat'):
+def pitch_confusion(y_pred, y_true, save_path, vtype='heat'):
     global perm
     data = np.zeros((y_pred.shape[1], y_true.shape[1]))
 
@@ -102,18 +102,20 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
     # visualize data
 
     if vtype == 'heat':
-        sns.heatmap(data=data)
+        g = sns.heatmap(data=data)
     elif vtype == 'cluster':
-        sns.clustermap(data=data)
+        g = sns.clustermap(data=data)
     elif vtype == 'joint':
-        sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels(
+        g =sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels(
             "True", "Pred")
     elif vtype == 'scatter':
-        sns.scatterplot(x=data_v[:, 0], y=data_v[:, 1], size=data_v[:, 2])
+        g = sns.scatterplot(x=data_v[:, 0], y=data_v[:, 1], size=data_v[:, 2])
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
 
+    g.savefig(save_path + str('_confusion_matrix.png'))
+
     print("Confusion Matrix done.")
-    # TODO: [Sebastian] Save as png
+
     plt.show()
