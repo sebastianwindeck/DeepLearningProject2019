@@ -11,17 +11,16 @@ from sklearn.metrics import confusion_matrix
 
 
 def final_score(y_pred, y_true):
-
     if not y_pred.shape == y_true.shape:
         print("Warning y_pred and y_true do not have the same shape please set other ")
-    # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision
-    #                   distribution / histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
+    # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision distribution /
+    # histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
     pass
 
 
 def pitch_confusion(y_pred, y_true, vtype='heat'):
-    data = np.zeros((y_pred.shape[1],y_true.shape[1]))
+    data = np.zeros((y_pred.shape[1], y_true.shape[1]))
 
     # compare pred with true
     # number of true notes per time steps
@@ -46,14 +45,13 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
         # find right classified pitches
         classified = np.intersect1d(ind_t, ind_p)
         # find missed pitches
-        missed = np.setdiff1d(ind_t,ind_p)
+        missed = np.setdiff1d(ind_t, ind_p)
         # find misclassified pitches
-        misclassified = np.setdiff1d(ind_p,ind_t)
+        misclassified = np.setdiff1d(ind_p, ind_t)
 
         # Add classified pitches
         weight = 0
 
-        j = 0
         for j in range(classified.shape[0]):
             data[classified[j], classified[j]] += np.minimum(pred_weight[i], 1)
 
@@ -81,20 +79,15 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
             weight = len(missed) / len(misclassified)
 
         for row in perm:
-
             data[row[0], row[1]] += weight
 
     # visualize data
-    true = []
-    pred = []
-    matrix_weight = []
     if vtype == 'heat':
         sns.heatmap(data=data)
     elif vtype == 'cluster':
         sns.clustermap(data=data)
     elif vtype == 'joint':
-        sns.jointplot(x=true, y=pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
-            .set_axis_labels("True", "Pred")
+        sns.jointplot(x=true, y=pred).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels("True", "Pred")
     elif vtype == 'scatter':
         sns.scatterplot(x=true, y=pred, size=matrix_weight)
     else:
