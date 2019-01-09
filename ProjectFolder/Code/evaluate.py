@@ -54,9 +54,8 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
         weight = 0
 
         j = 0
-        while j < len(classified):
+        for j in range(classified.shape[0]):
             data[classified[j], classified[j]] += np.minimum(pred_weight[i], 1)
-            j = +1
 
         # Case 1: perfect silence
         if len(classified) == 0 and len(misclassified) == 0 and len(missed) == 0:
@@ -64,26 +63,26 @@ def pitch_confusion(y_pred, y_true, vtype='heat'):
             weight = 0
         # Case 2: to many predictions
         elif len(missed) == 0 and len(misclassified) > 0:
-            perm = list(itertools.product(classified, misclassified))
+            perm = np.stack(np.meshgrid(classified, misclassified), -1).reshape(-1, 2)
             if len(classified) > 0:
                 weight = len(misclassified) / len(classified)
             else:
                 weight = 1
         # Case 3: to few predictions
         elif len(missed) > 0 and len(misclassified) == 0:
-            perm = list(itertools.product(missed, classified))
+            perm = np.stack(np.meshgrid(missed, classified), -1).reshape(-1, 2)
             if len(classified) > 0:
                 weight = len(missed) / len(classified)
             else:
                 weight = 1
         # Case 4: both missed and misclassified
         elif len(missed) > 0 and len(misclassified) > 0:
-            perm = list(itertools.product(missed, misclassified))
+            perm = np.stack(np.meshgrid(missed, misclassified), -1).reshape(-1, 2)
             weight = len(missed) / len(misclassified)
 
-        for item in perm:
+        for row in perm:
 
-            data[item[0], item[1]] += weight
+            data[row[0], row[1]] += weight
 
     # visualize data
     true = []
