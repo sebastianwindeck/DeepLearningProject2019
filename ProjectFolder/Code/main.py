@@ -145,6 +145,8 @@ if __name__ == '__main__':
     # initialize noiser:
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
 
+    noise_levels = np.zeros(shape=1)
+
     # loop over various noise epochs:
     #   DONE:   [all]        v.	For noiseEpochs = 1 … XXX
     for noiseEpoch in range(args['noise_epochs']):
@@ -182,12 +184,15 @@ if __name__ == '__main__':
             # if we reach this point, the classi_perf is in the defined interval
             # => Exit the while loop and train the amt with the new noisy data
             break
-
-        # TODO:  [Malte]:  i.	Break -> save Noise file (this is not an audio file!!)
+        # appending current noise level before training to numpy array "noise_levels"
+        noise_levels = np.append(noise_levels, noise_level)
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
         at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_'+str(noiseEpoch))
+
+    # Save np array of noise levels
+    np.save("noise_levels", noise_levels)
 
     # end for noiseEpoch in range(args['noise_epochs'])
 
