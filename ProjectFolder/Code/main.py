@@ -6,9 +6,9 @@ import os
 
 import numpy as np
 
-from ProjectFolder.Code.evaluate import pitch_confusion, final_score
-from ProjectFolder.Code.extractfeatures import prepareData
-from ProjectFolder.Code.model import Noiser, AMTNetwork
+from evaluate import pitch_confusion, final_score
+from extractfeatures import prepareData
+from model import Noiser, AMTNetwork
 
 # import foolbox
 # from foolbox import Adversarial
@@ -168,4 +168,4 @@ if __name__ == '__main__':
     final_score(y_pred=y_pred, y_true=y_true, description='final')
     pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
 
-print("DONE.")
+    print("DONE.")
