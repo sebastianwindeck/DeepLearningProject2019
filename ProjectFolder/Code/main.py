@@ -163,7 +163,6 @@ if __name__ == '__main__':
     # end for noiseEpoch in range(args['noise_epochs'])
 
     # Final evaluation:
-    #   TODO:   [Sebastian]   vi.	Overall eval:
     #                           1.	F1 score compared to noise level
     #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
     final_score(y_pred=y_pred, y_true=y_true, description='final')

@@ -149,38 +149,6 @@ class AMTNetwork:
         #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
         #                              callbacks=callbacks)
 
-        # comment AS: some old stuff, from keras_train. not sure whether this works with our training method, and if so
-        # whether this is somehow usefull.
-        '''
-        # list all data in history
-        print(history.history.keys())
-        # summarize history for accuracy
-        plt.plot(history.history['acc'])
-        plt.plot(history.history['val_acc'])
-        plt.title('model accuracy')
-        plt.ylabel('accuracy')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'val'], loc='upper left')
-        plt.savefig('baseline/acc.png')'''
-
-        '''
-        # summarize history for loss
-        plt.plot(history.history['loss'])
-        plt.plot(history.history['val_loss'])
-        plt.title('model loss')
-        plt.ylabel('loss')
-        plt.xlabel('epoch')
-        plt.legend(['train', 'val'], loc='upper left')
-        plt.savefig('loss.png')
-
-        # test
-        testGen = DataGen(os.path.join(path, 'data', 'test'), batch_size, args)
-
-        res = model.evaluate_generator(testGen.next(), steps=testGen.steps())
-        print(model.metrics_names)
-        print(res)
-        '''
-
     def transcribe(self, data):
         """ Apply learned model to data, and return the transcription.
 
@@ -232,7 +200,9 @@ class AMTNetwork:
         print("Loaded model from disk")
         self.model = loaded_model
         self.model.compile(loss='binary_crossentropy', optimizer=Adam(
-            lr=self.init_lr))  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  # Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+            lr=self.init_lr))
+        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
+        #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 class Noiser():
