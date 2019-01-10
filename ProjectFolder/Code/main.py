@@ -1,91 +1,49 @@
 from __future__ import print_function, division
 
-from keras import metrics
-from keras import backend as K
-
-from keras.callbacks import Callback
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
-
-from keras.layers import Input, Dense, Reshape, Flatten, Dropout
-from keras.layers import BatchNormalization, Activation, ZeroPadding2D
-from keras.layers import Conv2D, MaxPooling2D, add
-
-from keras.layers.advanced_activations import LeakyReLU
-from keras.layers.convolutional import UpSampling2D, Conv2D
-from keras.layers.normalization import BatchNormalization
-
-from keras.models import Sequential, Model, load_model, model_from_json
-
-from keras.optimizers import Adam, SGD
-
-from keras.utils import plot_model
-
-#import foolbox
-#from foolbox import Adversarial
-#from foolbox.distances import MeanSquaredDistance
-
-import librosa
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import inspect
-
-# import pretty_midi
-import sys
-import tensorflow as tf
-
-import sklearn
-from sklearn.metrics import precision_recall_fscore_support
-
-from operator import concat
-
-
-import io  # has function prepareData(args)
-
 import datetime
+import inspect
+import os
 
+import numpy as np
+
+from ProjectFolder.Code.evaluate import pitch_confusion, final_score
 from ProjectFolder.Code.extractfeatures import prepareData
 from ProjectFolder.Code.model import Noiser, AMTNetwork
-from ProjectFolder.Code.evaluate import pitch_confusion, final_score
+
+# import foolbox
+# from foolbox import Adversarial
+# from foolbox.distances import MeanSquaredDistance
+# import pretty_midi
 
 if __name__ == '__main__':
 
     proj_root = os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))), '..')
 
     # Define a parameter structure args
-    args = {# model parameters:
-        'model_name': 'baseline',
-        #für init lr geht auch 0.1
-        'init_lr': 1e-2,
-        'lr_decay': 'linear',
+    args = {  # model parameters:
+        'model_name': 'baseline', # für init lr geht auch 0.1
+        'init_lr': 1e-2, 'lr_decay': 'linear',
 
         # parameters for audio
-        'sr': 16000,
-        'spec_type': 'cqt',
-        'bin_multiple': 3,
-        'residual': 'False',
-        'min_midi': 21,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False', 'min_midi': 21,
+    # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
         'max_midi': 108,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
-        'window_size': 7,#choose higher value than 5
+        'window_size': 7,  # choose higher value than 5
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
-        'epochs_on_clean': 100,
-        'epochs_on_noisy': 10,
-        'noise_epochs': 20,
-        'min_difficulty_on_noisy': 0.05,  # just a random value...
+        'epochs_on_clean': 100, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
+    # just a random value...
         'max_difficulty_on_noisy': 0.15,  # just a random value...
 
         # noise parameters:
-        'noise_type': 'simplistic',
-        'noise_frames_per_epoch': 20,  # just a random value...
+        'noise_type': 'simplistic', 'noise_frames_per_epoch': 20,  # just a random value...
         'noise_initial_level': 0.001,  # just a random value...
         'noise_increase_factor': 1.5,  # just a random value...
         'noise_decrease_factor': 1.5,  # just a random value...
 
         # directories:
-        'proj_root': proj_root,
-        # - root directory of maps (with substructure as given in maps):
+        'proj_root': proj_root, # - root directory of maps (with substructure as given in maps):
         'wav_dir': os.path.join(proj_root, 'Audiodaten'),
         # - directory to store checkpoint files. All files are stored in this directory:
         'checkpoint_root': os.path.join(proj_root, 'Checkpoints', \
@@ -93,7 +51,7 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
         'maxFramesPerFile': 20,  # set to -1 to ignore
-        'maxFrames': 50         # set to -1 to ignore
+        'maxFrames': 50  # set to -1 to ignore
     }  # Feel free to add more parameters if needed.
 
     # derived parameters:
@@ -135,9 +93,8 @@ if __name__ == '__main__':
     baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
     evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
     if train_basemodel:
-
-    # initial training, with clean data:
-        at.train( inputs, outputs, epochs = args['epochs_on_clean'], train_descr='initial')
+        # initial training, with clean data:
+        at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
 
@@ -176,12 +133,12 @@ if __name__ == '__main__':
             if classi_perf > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
-                continue # Jump to the next cycle
+                continue  # Jump to the next cycle
 
             if classi_perf < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
-                continue # Jump to the next cycle
+                continue  # Jump to the next cycle
 
             # if we reach this point, the classi_perf is in the defined interval
             # => Exit the while loop and train the amt with the new noisy data
@@ -191,7 +148,7 @@ if __name__ == '__main__':
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
-        at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_'+str(noiseEpoch))
+        at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
 
         y_pred = []
         y_true = []
@@ -203,15 +160,13 @@ if __name__ == '__main__':
     # Save np array of noise levels
     np.save("noise_levels", noise_levels)
 
-
-
     # end for noiseEpoch in range(args['noise_epochs'])
 
-# Final evaluation:
-#   TODO:   [Sebastian]   vi.	Overall eval:
-#                           1.	F1 score compared to noise level
-#                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
-    final_score(y_pred=y_pred,y_true=y_true,description='final')
-    pitch_confusion(y_pred=y_pred,y_true=y_true, save_path=evaluatePath, description='final')
+    # Final evaluation:
+    #   TODO:   [Sebastian]   vi.	Overall eval:
+    #                           1.	F1 score compared to noise level
+    #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
+    final_score(y_pred=y_pred, y_true=y_true, description='final')
+    pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
 
 print("DONE.")
