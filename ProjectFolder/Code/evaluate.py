@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import classification_report
 
-# Comment AS: die Funktionen sind sinnvoll; tendenziell sollten wir die aber nur für die "end-Auswertung" brauchen. Fürs
-# Bewerten der Noise-Kandidaten können wir evtl. direkt eine evaluate-Funktion des Modells (aus Keras) nutzen.
 # TODO: Malte check.
 
 
