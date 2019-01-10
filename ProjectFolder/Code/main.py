@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
         at.save(baseModelPath)
 
-    if not train_basemodel:
+    else:
         at.load(baseModelPath)
 
     # initialize noiser:
