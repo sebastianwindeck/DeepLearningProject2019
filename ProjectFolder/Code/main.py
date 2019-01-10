@@ -211,7 +211,7 @@ if __name__ == '__main__':
 #   TODO:   [Sebastian]   vi.	Overall eval:
 #                           1.	F1 score compared to noise level
 #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
-final_score(y_pred=y_pred,y_true=y_true,description='final')
-pitch_confusion(y_pred=y_pred,y_true=y_true, save_path=evaluatePath, description='final')
+    final_score(y_pred=y_pred,y_true=y_true,description='final')
+    pitch_confusion(y_pred=y_pred,y_true=y_true, save_path=evaluatePath, description='final')
 
 print("DONE.")
