@@ -46,6 +46,7 @@ import datetime
 
 from ProjectFolder.Code.extractfeatures import prepareData
 from ProjectFolder.Code.model import Noiser, AMTNetwork
+from ProjectFolder.Code.evaluate import pitch_confusion, final_score
 
 if __name__ == '__main__':
 
@@ -132,6 +133,7 @@ if __name__ == '__main__':
 
     train_basemodel = True
     baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
+    evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
     if train_basemodel:
 
     # initial training, with clean data:
@@ -189,10 +191,20 @@ if __name__ == '__main__':
         # TODO: probably needs some refinements => look ok for now.
         at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_'+str(noiseEpoch))
 
+        y_pred = []
+        y_true = []
+
+        if (noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0)):
+            final_score(y_pred=y_pred,y_true=y_true, description=str(noiseEpoch))
+            pitch_confusion(y_pred=y_pred,y_true=y_true, save_path=evaluatePath,description=str(noiseEpoch))
+
     # end for noiseEpoch in range(args['noise_epochs'])
 
+# Final evaluation:
 #   TODO:   [Sebastian]   vi.	Overall eval:
 #                           1.	F1 score compared to noise level
 #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
+final_score(y_pred=y_pred,y_true=y_true,description='final')
+pitch_confusion(y_pred=y_pred,y_true=y_true, save_path=evaluatePath, description='final')
 
 print("DONE.")
