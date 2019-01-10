@@ -1,26 +1,15 @@
-from keras.callbacks import Callback
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard, CSVLogger
-from keras.layers import Dense, Dropout, Flatten, Reshape, Input
-from keras.layers import Conv2D, MaxPooling2D, add
-from keras.layers.normalization import BatchNormalization
-from keras.layers import Activation
-from keras.models import Model, load_model, model_from_json
-from keras.optimizers import SGD, Adam
-from keras import backend as K
-from keras.utils import plot_model
+import os
+from operator import concat
 
 import numpy as np
-from operator import concat
-import os
-
-import pretty_midi
-
-import tensorflow as tf
-
-import sklearn
-from sklearn.metrics import precision_recall_fscore_support
-
-import matplotlib.pyplot as plt
+from keras import backend as K
+from keras.callbacks import Callback
+from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
+from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Dense, Dropout, Flatten, Reshape, Input
+from keras.models import Model, model_from_json
+from keras.optimizers import Adam
+from keras.utils import plot_model
 
 
 # AS: not needed
@@ -161,8 +150,9 @@ class AMTNetwork:
         :return: predicted transcription. Shape is (Nframes, ...)
         """
 
-        Y = self.model.predict(X)
-        return Y
+        y_pred = self.model.predict(X)
+        return y_pred
+
 
     def evaluation(self, x_new, x_old, y_true):
 
