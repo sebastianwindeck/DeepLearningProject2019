@@ -116,3 +116,36 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
     print("Confusion Matrix done.")
 
     plt.show()
+
+
+# comment AS: some old stuff, from keras_train. not sure whether this works with our training method, and if so
+# whether this is somehow usefull.
+'''
+# list all data in history
+print(history.history.keys())
+# summarize history for accuracy
+plt.plot(history.history['acc'])
+plt.plot(history.history['val_acc'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.savefig('baseline/acc.png')'''
+
+'''
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'val'], loc='upper left')
+plt.savefig('loss.png')
+
+# test
+testGen = DataGen(os.path.join(path, 'data', 'test'), batch_size, args)
+
+res = model.evaluate_generator(testGen.next(), steps=testGen.steps())
+print(model.metrics_names)
+print(res)
+'''
