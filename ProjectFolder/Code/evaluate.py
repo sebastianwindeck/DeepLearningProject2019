@@ -6,7 +6,7 @@ from sklearn.metrics import classification_report
 # TODO: Malte check.
 
 
-def final_score(y_pred, y_true):
+def final_score(y_pred, y_true, description):
     if not y_pred.shape == y_true.shape:
         print("Warning y_pred and y_true do not have the same shape please set other ")
 
