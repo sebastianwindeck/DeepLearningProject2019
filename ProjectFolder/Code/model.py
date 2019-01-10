@@ -187,8 +187,9 @@ class AMTNetwork:
 
         """ Evaluate score of predicting new noise level and compare it to score of old noise level.
 
-                :param data: x_new is x clean combined with current noise_level
-                x_old is x clean combined with noise level before current loop.
+                :param x_new: is x clean combined with current noise_level
+                :param x_old: is x clean combined with noise level before current loop.
+                :param y_true: is true labbeling of data
                 :return: percentage difference of new score compared to score of noise level of anterior loop
                 """
 
