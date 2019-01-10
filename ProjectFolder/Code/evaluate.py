@@ -18,19 +18,16 @@ def final_score(y_pred, y_true):
     # number of pred notes per time steps
     pred_count = np.count_nonzero(y_pred, axis=1)
 
-    for i in np.unique(true_count):
-        print("Report for ", i)
-        print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
-
-
-
     # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision distribution /
     # histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
-    pass
+    for i in np.unique(true_count):
+        print("Report for ", i)
+        print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
+        # save in variable to work with
 
 
-def pitch_confusion(y_pred, y_true, save_path, vtype='heat'):
+def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
     global perm
     data = np.zeros((y_pred.shape[1], y_true.shape[1]))
 
@@ -93,7 +90,7 @@ def pitch_confusion(y_pred, y_true, save_path, vtype='heat'):
         for row in perm:
             data[row[0], row[1]] += weight
 
-    # denumerate data matrix in 2d indices combination with value
+    # denumerate data matrix in 2d indices combination with value in column 3
 
     xx, yy = np.meshgrid(np.arange(data.shape[1]), np.arange(data.shape[0]))
     data_v = np.vstack((xx.ravel(), yy.ravel(), data.ravel())).T
@@ -113,8 +110,8 @@ def pitch_confusion(y_pred, y_true, save_path, vtype='heat'):
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
-
-    g.savefig(save_path + str('_confusion_matrix.png'))
+    g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+    g.savefig(save_path + str('_confusion_matrix_') +  str(description) + str('_epoch.png'))
 
     print("Confusion Matrix done.")
 
