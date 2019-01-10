@@ -113,7 +113,10 @@ class AMTNetwork:
         self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr))
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
-        plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
+        try:
+            plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
+        except:
+            print('error: could not create png')
 
     def train(self, features, labels, epochs=1000, train_descr=''):
         """ Do training on the provided data set.
@@ -181,25 +184,29 @@ class AMTNetwork:
         print(res)
         '''
 
-    def transcribe(self, data):
+    def transcribe(self, model, X):
         """ Apply learned model to data, and return the transcription.
 
         :param data: new data to be transcribed. Shape is (Nframes, self.window_size, self.feature_bins)
         :return: predicted transcription. Shape is (Nframes, ...)
         """
-        # TODO: [Malte] (vermutlich gibt's da eine Funktion "predict" o.ä.)
-        output = []
 
-        return output
+        Y = model.predict(X)
 
-    def evaluation(self, x_new, x_old, y_true, model):
-        # x_new daten die bereits mit neuer noise verknüpft wurden, x_old daten die den letzten noise loop nicht haben
-        #       allenfalls kann hier auch direkt eine Funktion in der Art evaluate(new_data, new_ground_truth)
-        #       aufgerufen werden, die dann eine prediction/transcription macht und die Qualität (gem. dem
-        #       festgelegten Mass) bestimmt.
-        # comment SW:   TODO: [Malte] du hast einen Parameter model ist es nicht besser sich auf self.model zu beziehen.
-        res_new = model.evaluate(x_new, y_true)
-        res_old = model.evaluate(x_old, y_true)
+
+        return Y
+
+    def evaluation(self, x_new, x_old, y_true):
+
+        """ Evaluate score of predicting new noise level and compare it to score of old noise level.
+
+                :param data: x_new is x clean combined with current noise_level
+                x_old is x clean combined with noise level before current loop.
+                :return: percentage difference of new score compared to score of noise level of anterior loop
+                """
+
+        res_new = self.model.evaluate(x_new, y_true)
+        res_old = self.model.evaluate(x_old, y_true)
         dif = res_new - res_old
         dif_percent = dif / res_old
         print("neues Loss", res_new)
@@ -262,3 +269,6 @@ class Noiser():
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
             return 0
+
+
+
