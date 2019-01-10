@@ -153,7 +153,7 @@ if __name__ == '__main__':
         y_pred = []
         y_true = []
 
-        if (noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0)):
+        if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
             final_score(y_pred=y_pred, y_true=y_true, description=str(noiseEpoch))
             pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 
