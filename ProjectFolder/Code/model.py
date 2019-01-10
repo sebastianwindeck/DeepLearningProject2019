@@ -11,7 +11,6 @@ from keras.models import Model, model_from_json
 from keras.optimizers import Adam
 from keras.utils import plot_model
 
-
 # AS: not needed
 # from ProjectFolder.Code.configuration import load_config
 
@@ -45,6 +44,36 @@ class HalfDecay(Callback):
         print("hd: learning rate is now " + str(lr))
         K.set_value(self.model.optimizer.lr, lr)
 
+
+def f1(y_true, y_pred):
+    def recall(y_true, y_pred):
+        """Recall metric.
+
+        Only computes a batch-wise average of recall.
+
+        Computes the recall, a metric for multi-label classification of
+        how many relevant items are selected.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+        recall = true_positives / (possible_positives + K.epsilon())
+        return recall
+
+    def precision(y_true, y_pred):
+        """Precision metric.
+
+        Only computes a batch-wise average of precision.
+
+        Computes the precision, a metric for multi-label classification of
+        how many selected items are relevant.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+        precision = true_positives / (predicted_positives + K.epsilon())
+        return precision
+    precision = precision(y_true, y_pred)
+    recall = recall(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 class AMTNetwork:
     def __init__(self, args):
@@ -99,7 +128,7 @@ class AMTNetwork:
 
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr))
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
