@@ -130,7 +130,8 @@ class AMTNetwork:
 
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr, momentum=0.9), metrics=[f1])
+
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr, momentum=0.9), metrics=[f1,'accuracy','precision','recall')
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
@@ -144,7 +145,7 @@ class AMTNetwork:
         """
 
         # filenames
-        model_ckpt = os.path.join(self.checkpoint_root + train_descr)
+        model_ckpt = os.path.join(self.checkpoint_root, train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
 
         # how does the learning rate change over time?
@@ -156,11 +157,11 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.{epoch:02d}-{val_loss:.2f}.h5',
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5',
                                           monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
-                                         verbose=1, mode='min', period=10)
-        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=1, mode='min')
+                                         verbose=1, mode='min', period=50)
+        early_stop = EarlyStopping(patience=2, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
@@ -190,14 +191,14 @@ class AMTNetwork:
                 :return: percentage difference of new score compared to score of noise level of anterior loop
                 """
 
-        res_new = self.model.evaluate(x_new, y_true)[0]
-        res_old = self.model.evaluate(x_old, y_true)[0]
+        res_new = self.model.evaluate(x_new, y_true)[1]
+        res_old = self.model.evaluate(x_old, y_true)[1]
         dif = res_new - res_old
         dif_percent = dif / res_old
-        print("neues Loss", res_new)
-        print("altes Loss", res_old)
-        print("loss has increased by", dif, "absolute")
-        print("loss has increased by", dif_percent, "percent")
+        #print("neues Loss", res_new)
+        #print("altes Loss", res_old)
+        #print("loss has increased by", dif, "absolute")
+        #print("loss has increased by", dif_percent, "percent")
 
         return dif_percent
 
