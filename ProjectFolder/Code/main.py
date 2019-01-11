@@ -121,21 +121,23 @@ if __name__ == '__main__':
         # indices of data samples to be noised.
         idx = np.random.randint(0, inputs.shape[0], args['noise_frames_per_epoch'])
         noise_level = args['noise_initial_level']
+        classi_change = 0.00
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[None, idx] + noise_level * this_noise
+
 
             #  TODO: d.	Evaluate performance of classifier based on noise candidate
             #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
             #
 
-            classi_perf = 0.42
-            if classi_perf > args['max_difficulty_on_noisy']:
+            classi_change = 0.00
+            if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
                 continue  # Jump to the next cycle
 
-            if classi_perf < args['min_difficulty_on_noisy']:
+            if classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
                 continue  # Jump to the next cycle
