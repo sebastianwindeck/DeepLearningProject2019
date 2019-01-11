@@ -159,7 +159,7 @@ class AMTNetwork:
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5',
-                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min', period=20)
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
                                          verbose=1, mode='min', period=50)
         early_stop = EarlyStopping(patience=2, monitor='val_loss', verbose=1, mode='min')
@@ -171,15 +171,15 @@ class AMTNetwork:
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
 
-    def transcribe(self, X):
+    def transcribe(self, x):
 
         """ Apply learned model to data, and return the transcription.
 
-        :param data: new data to be transcribed. Shape is (Nframes, self.window_size, self.feature_bins)
+        :param x: new data to be transcribed. Shape is (Nframes, self.window_size, self.feature_bins)
         :return: predicted transcription. Shape is (Nframes, ...)
         """
 
-        y_pred = self.model.predict(X)
+        y_pred = self.model.predict(x)
         return y_pred
 
     def evaluation(self, x_new, x_old, y_true):
@@ -234,10 +234,10 @@ class Noiser():
     # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
     #               Start with Gaussian (=white), brown, pink etc.
 
-    def __init__(self, noise_size, noise_type="simplistic"):
+    def __init__(self, noise_size, noise_type="white"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type != 'simplistic':
+        if self.noise_type != 'white':
             print(
                 "WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")  # to be changed once we have other noise types...
 
@@ -252,7 +252,7 @@ class Noiser():
         :return: an np.array with the specified noise
         """
 
-        if self.noise_type == 'simplistic':
+        if self.noise_type == 'white':
             return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
