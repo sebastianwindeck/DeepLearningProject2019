@@ -117,12 +117,12 @@ class AMTNetwork:
         flattened = Flatten()(pool2)
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
-        fc1 = Dense(100, activation='sigmoid')(flattened)
+        fc1 = Dense(500, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
         # fc2 = Dense(200, activation='sigmoid')(do3)
-        fc2 = Dense(50, activation='sigmoid')(do3)
+        fc2 = Dense(200, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
@@ -164,7 +164,7 @@ class AMTNetwork:
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=50,
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=256,
                                 validation_split=0.1)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
