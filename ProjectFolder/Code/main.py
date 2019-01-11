@@ -123,11 +123,10 @@ if __name__ == '__main__':
         classi_change = 0.00
         while True:
             # b.	Combine noise with clean data (noise and audio)
-            noisy_X = inputs[None, idx] + noise_level * this_noise
-            noisy_Xold = inputs[None, idx] + noise_levels[noiseEpoch]*this_noise
-            y = outputs[None, idx]
+            noisy_X = inputs[idx] + noise_level * this_noise
+            noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
+            y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
-
 
             #  TODO: d.	Evaluate performance of classifier based on noise candidate
             #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
@@ -149,16 +148,18 @@ if __name__ == '__main__':
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
 
-
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
-        noisy_inputs = 
-        at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
-
-        y_pred = []
-        y_true = []
+        this_noise = noise_generator.generate(inputs.shape[0])
+        noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
+        at.train(noisy_inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
 
         if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
+            y_pred = at.transcribe(noisy_inputs)
+            print(y_pred)
+            print(y_pred.shape)
+            y_true = outputs
+            print(y_true.shape)
             final_score(y_pred=y_pred, y_true=y_true, description=str(noiseEpoch))
             pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 

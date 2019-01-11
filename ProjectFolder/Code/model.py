@@ -190,8 +190,8 @@ class AMTNetwork:
                 :return: percentage difference of new score compared to score of noise level of anterior loop
                 """
 
-        res_new = self.model.evaluate(x_new, y_true)
-        res_old = self.model.evaluate(x_old, y_true)
+        res_new = self.model.evaluate(x_new, y_true)[0]
+        res_old = self.model.evaluate(x_old, y_true)[0]
         dif = res_new - res_old
         dif_percent = dif / res_old
         print("neues Loss", res_new)
