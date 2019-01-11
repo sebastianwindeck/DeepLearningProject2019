@@ -42,7 +42,6 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
         print("Warning evaluation will collapse due to different length of predicted and true labels.")
 
     for i in range(y_pred.shape[0]):
-        print(i)
         # Identify the notes on the piano roll
         ix_p = np.isin(y_pred[i], 1)
         ind_p = np.where(ix_p)[0]
