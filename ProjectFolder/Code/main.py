@@ -155,8 +155,9 @@ if __name__ == '__main__':
         at.train(noisy_inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
 
         if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
-            y_pred = np.round(at.transcribe(noisy_inputs),decimals=0)
-            print(np.sum(y_pred, axis=1))
+            y_pred = at.transcribe(noisy_inputs)
+            print(np.max(y_pred, axis=1))
+            y_pred = np.around(y_pred,decimals=0)
             print(y_pred.shape)
             y_true = outputs
             print(y_true.shape)
