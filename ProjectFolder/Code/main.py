@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # Define a parameter structure args
     args = {  # model parameters:
         'model_name': 'baseline',  # für init lr geht auch 0.1
-        'init_lr': 1e-2, 'lr_decay': 'linear',
+        'init_lr': 1e-1, 'lr_decay': 'linear',
 
         # parameters for audio
         'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False', 'min_midi': 21,
@@ -30,9 +30,10 @@ if __name__ == '__main__':
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
+        'train_basemodel' : True,
         'epochs_on_clean': 100, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
         # just a random value...
-        'max_difficulty_on_noisy': 0.15,  # just a random value...
+        'max_difficulty_on_noisy': 0.1,  # just a random value...
 
         # noise parameters:
         'noise_type': 'simplistic', 'noise_frames_per_epoch': 20,  # just a random value...
@@ -48,8 +49,8 @@ if __name__ == '__main__':
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
-        'maxFramesPerFile': 20,  # set to -1 to ignore
-        'maxFrames': 50  # set to -1 to ignore
+        'maxFramesPerFile': 200,  # set to -1 to ignore
+        'maxFrames': 5000  # set to -1 to ignore
     }  # Feel free to add more parameters if needed.
 
     # derived parameters:
@@ -83,17 +84,13 @@ if __name__ == '__main__':
     # - icqt is not perfect, but should be sufficiently good to describe e.g. the frequency distribution of the noise.
     # => ANGENOMMEN
     inputs, outputs, datapath = prepareData(args)
-    # TODO: delete or transfer np.nan_to_num
-    np.nan_to_num(inputs)
-    np.nan_to_num(outputs)
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
 
-    train_basemodel = True
     baseModelPath = os.path.join(args['basemodel_root'], 'basemodel')
     evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
-    if train_basemodel:
+    if args['train_basemodel']:
         # initial training, with clean data:
         at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
@@ -138,13 +135,17 @@ if __name__ == '__main__':
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
+                print(noise_level)
                 continue  # Jump to the next cycle
 
             if classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
+                print(noise_level)
                 continue  # Jump to the next cycle
 
+            # while loop fails to NaN for noise level
+            print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
             # if we reach this point, the classi_perf is in the defined interval
             # => Exit the while loop and train the amt with the new noisy data
             break
