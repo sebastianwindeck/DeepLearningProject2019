@@ -48,8 +48,8 @@ if __name__ == '__main__':
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
-        'maxFramesPerFile': 10000,  # set to -1 to ignore
-        'maxFrames': 10000  # set to -1 to ignore
+        'maxFramesPerFile': 1000,  # set to -1 to ignore
+        'maxFrames': 20000  # set to -1 to ignore
     }  # Feel free to add more parameters if needed.
 
     # derived parameters:

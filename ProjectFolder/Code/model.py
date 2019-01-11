@@ -106,11 +106,11 @@ class AMTNetwork:
         reshape = Reshape(self.input_shape_channels)(inputs)
 
         # normal convnet layer (have to do one initially to get 64 channels)
-        conv1 = Conv2D(50, (5, 25), activation='relu', padding='valid', data_format="channels_last")(reshape)
+        conv1 = Conv2D(50, (5, 25), activation='tanh', padding='valid', data_format="channels_last")(reshape)
         do1 = Dropout(0.5)(conv1)
         pool1 = MaxPooling2D(pool_size=(1, 3))(do1)
 
-        conv2 = Conv2D(50, (3, 5), activation='relu', padding='valid', data_format="channels_last")(pool1)
+        conv2 = Conv2D(50, (3, 5), activation='tanh', padding='valid', data_format="channels_last")(pool1)
         do2 = Dropout(0.5)(conv2)
         pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
 
@@ -130,7 +130,7 @@ class AMTNetwork:
 
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr), metrics=[f1])
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr, momentum=0.9), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
