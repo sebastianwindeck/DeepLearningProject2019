@@ -224,8 +224,9 @@ class AMTNetwork:
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
         self.model = loaded_model
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(
-            lr=self.init_lr))  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
+        #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+
 
 
 class Noiser():
