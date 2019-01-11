@@ -8,7 +8,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
-from keras.optimizers import Adam
+from keras.optimizers import Adam, SGD
 from keras.utils import plot_model
 
 # AS: not needed
@@ -131,7 +131,7 @@ class AMTNetwork:
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr, momentum=0.9), metrics=[f1,'accuracy','precision','recall'])
+        self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1,'accuracy'])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
