@@ -103,6 +103,7 @@ if __name__ == '__main__':
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
 
     noise_levels = np.zeros(shape=1)
+    noise_level = args['noise_initial_level']
 
     # loop over various noise epochs:
     #   DONE:   [all]        v.	For noiseEpochs = 1 … XXX
@@ -118,11 +119,14 @@ if __name__ == '__main__':
 
         # indices of data samples to be noised.
         idx = np.random.randint(0, inputs.shape[0], args['noise_frames_per_epoch'])
-        noise_level = args['noise_initial_level']
+
         classi_change = 0.00
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[None, idx] + noise_level * this_noise
+            noisy_Xold = inputs[None, idx] + noise_levels[noiseEpoch]*this_noise
+            y = outputs[None, idx]
+            classi_change = at.evaluation(noisy_X, noisy_Xold, y)
 
 
             #  TODO: d.	Evaluate performance of classifier based on noise candidate
@@ -145,6 +149,7 @@ if __name__ == '__main__':
             break
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
+
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
