@@ -83,6 +83,9 @@ if __name__ == '__main__':
     # - icqt is not perfect, but should be sufficiently good to describe e.g. the frequency distribution of the noise.
     # => ANGENOMMEN
     inputs, outputs, datapath = prepareData(args)
+    # TODO: delete or transfer np.nan_to_num
+    np.nan_to_num(inputs)
+    np.nan_to_num(outputs)
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
