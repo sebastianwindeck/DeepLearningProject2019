@@ -11,7 +11,6 @@ from keras.models import Model, model_from_json
 from keras.optimizers import Adam
 from keras.utils import plot_model
 
-
 # AS: not needed
 # from ProjectFolder.Code.configuration import load_config
 
@@ -44,6 +43,38 @@ class HalfDecay(Callback):
         lr = self.init_lr / (2 ** factor)
         print("hd: learning rate is now " + str(lr))
         K.set_value(self.model.optimizer.lr, lr)
+
+
+def f1(y_true, y_pred):
+    def recall(y_true, y_pred):
+        """Recall metric.
+
+        Only computes a batch-wise average of recall.
+
+        Computes the recall, a metric for multi-label classification of
+        how many relevant items are selected.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+        recall = true_positives / (possible_positives + K.epsilon())
+        return recall
+
+    def precision(y_true, y_pred):
+        """Precision metric.
+
+        Only computes a batch-wise average of precision.
+
+        Computes the precision, a metric for multi-label classification of
+        how many selected items are relevant.
+        """
+        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+        precision = true_positives / (predicted_positives + K.epsilon())
+        return precision
+
+    precision = precision(y_true, y_pred)
+    recall = recall(y_true, y_pred)
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
 class AMTNetwork:
@@ -99,7 +130,7 @@ class AMTNetwork:
 
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr))
+        self.model.compile(loss='binary_crossentropy', optimizer=Adam(lr=self.init_lr), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
@@ -133,14 +164,10 @@ class AMTNetwork:
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, validation_split=0.1)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=50,
+                                validation_split=0.1)
 
-        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
-        # Files). Für uns ist das wohl nicht sinnvoll.
-        # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
-        #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
-        #                              callbacks=callbacks)
-
+        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
 
     def transcribe(self, X):
 
@@ -153,13 +180,13 @@ class AMTNetwork:
         y_pred = self.model.predict(X)
         return y_pred
 
-
     def evaluation(self, x_new, x_old, y_true):
 
         """ Evaluate score of predicting new noise level and compare it to score of old noise level.
 
-                :param data: x_new is x clean combined with current noise_level
-                x_old is x clean combined with noise level before current loop.
+                :param x_new: is x clean combined with current noise_level
+                :param x_old: is x clean combined with noise level before current loop.
+                :param y_true: is true labbeling of data
                 :return: percentage difference of new score compared to score of noise level of anterior loop
                 """
 
@@ -197,9 +224,7 @@ class AMTNetwork:
         print("Loaded model from disk")
         self.model = loaded_model
         self.model.compile(loss='binary_crossentropy', optimizer=Adam(
-            lr=self.init_lr))
-        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
-        #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+            lr=self.init_lr))  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 class Noiser():
@@ -229,6 +254,3 @@ class Noiser():
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
             return 0
-
-
-

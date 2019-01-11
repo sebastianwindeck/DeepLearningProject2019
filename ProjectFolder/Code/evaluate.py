@@ -20,7 +20,7 @@ def final_score(y_pred, y_true, description):
     # histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
     for i in np.unique(true_count):
-        print("Report for ", i)
+        print("Report for {} in noise {} level".format(i, description))
         print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
         # save in variable to work with
 
@@ -98,22 +98,30 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
 
     if vtype == 'heat':
         g = sns.heatmap(data=data)
+        g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.get_figure()
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'cluster':
         g = sns.clustermap(data=data)
+        g.fig.suptitle('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.fig
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'joint':
-        g =sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6).set_axis_labels(
-            "True", "Pred")
+        g = sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
+            .set_axis_labels("True", "Pred")
+        g.fig.suptitle('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.fig
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'scatter':
         g = sns.scatterplot(x=data_v[:, 0], y=data_v[:, 1], size=data_v[:, 2])
+        fig = g.get_figure()
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
-    g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
-    g.savefig(save_path + str('_confusion_matrix_') +  str(description) + str('_epoch.png'))
-
+    plt.show()
     print("Confusion Matrix done.")
 
-    plt.show()
 
 
 # comment AS: some old stuff, from keras_train. not sure whether this works with our training method, and if so
