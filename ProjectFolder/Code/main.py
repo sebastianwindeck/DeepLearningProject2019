@@ -96,7 +96,6 @@ if __name__ == '__main__':
         at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
-        exit()
 
 
     else:
@@ -134,6 +133,9 @@ if __name__ == '__main__':
             #  TODO: d.	Evaluate performance of classifier based on noise candidate
             #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
             #
+            if noise_level > 10e8:
+                print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
+                break
 
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
