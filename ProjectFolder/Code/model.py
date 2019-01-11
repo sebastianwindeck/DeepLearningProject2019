@@ -229,17 +229,22 @@ class AMTNetwork:
         #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
+import acoustics
+
+from acoustics.generator import white, pink,blue, brown, violet
+
+import matplotlib.pyplot as plt
+
 
 class Noiser():
     # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
-    #               Start with Gaussian (=white), brown, pink etc.
+    #               Start with Gaussian (=white), pink, blue, brown, violet .
 
-    def __init__(self, noise_size, noise_type="white"):
+    def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type != 'white':
-            print(
-                "WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")  # to be changed once we have other noise types...
+        if self.noise_type.lower()  not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
+            print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
 
     def generate(self, n_noise_samples=1):
         """Generate noise samples.
@@ -252,8 +257,20 @@ class Noiser():
         :return: an np.array with the specified noise
         """
 
-        if self.noise_type == 'white':
-            return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+        #print("noise_type:", self.noise_type, "  noise_size:", self.noise_size)
+        if self.noise_type == 'simplistic':
+            #return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+            return np.random.uniform(0, 1, n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() in {'gaussian', 'white', 'normal'}:  
+            return white(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'pink':
+            return pink(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'blue':
+            return blue(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'brown':
+            return brown(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'violet':
+            return violet(n_noise_samples).reshape(self.noise_size)
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
-            return 0
+            return np.zeros((n_noise_samples)).reshape(self.noise_size)
