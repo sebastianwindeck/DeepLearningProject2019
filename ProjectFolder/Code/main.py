@@ -94,6 +94,7 @@ if __name__ == '__main__':
     evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
     if args['train_basemodel']:
         # initial training, with clean data:
+        at.compilation()
         at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
@@ -102,7 +103,7 @@ if __name__ == '__main__':
 
     else:
         at.load(baseModelPath)
-
+        at.compilation()
     # initialize noiser:
     noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
 
