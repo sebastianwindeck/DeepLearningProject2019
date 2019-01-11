@@ -97,6 +97,7 @@ if __name__ == '__main__':
         at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
+        exit()
 
 
     else:
