@@ -71,9 +71,11 @@ def f1(y_true, y_pred):
         predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
         precision = true_positives / (predicted_positives + K.epsilon())
         return precision
+
     precision = precision(y_true, y_pred)
     recall = recall(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall+K.epsilon()))
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
 
 class AMTNetwork:
     def __init__(self, args):
@@ -162,14 +164,10 @@ class AMTNetwork:
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
-        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, validation_split=0.1)
+        myLoss = self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=50,
+                                validation_split=0.1)
 
-        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
-        # Files). Für uns ist das wohl nicht sinnvoll.
-        # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
-        #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
-        #                              callbacks=callbacks)
-
+        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
 
     def transcribe(self, X):
 
@@ -181,7 +179,6 @@ class AMTNetwork:
 
         y_pred = self.model.predict(X)
         return y_pred
-
 
     def evaluation(self, x_new, x_old, y_true):
 
@@ -227,9 +224,7 @@ class AMTNetwork:
         print("Loaded model from disk")
         self.model = loaded_model
         self.model.compile(loss='binary_crossentropy', optimizer=Adam(
-            lr=self.init_lr))
-        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
-        #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+            lr=self.init_lr))  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 class Noiser():
@@ -259,6 +254,3 @@ class Noiser():
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
             return 0
-
-
-

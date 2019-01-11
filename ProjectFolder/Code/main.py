@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import datetime
 import inspect
 import os
@@ -21,19 +19,19 @@ if __name__ == '__main__':
 
     # Define a parameter structure args
     args = {  # model parameters:
-        'model_name': 'baseline', # für init lr geht auch 0.1
+        'model_name': 'baseline',  # für init lr geht auch 0.1
         'init_lr': 1e-2, 'lr_decay': 'linear',
 
         # parameters for audio
         'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False', 'min_midi': 21,
-    # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+        # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
         'max_midi': 108,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
         'epochs_on_clean': 100, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
-    # just a random value...
+        # just a random value...
         'max_difficulty_on_noisy': 0.15,  # just a random value...
 
         # noise parameters:
@@ -43,7 +41,7 @@ if __name__ == '__main__':
         'noise_decrease_factor': 1.5,  # just a random value...
 
         # directories:
-        'proj_root': proj_root, # - root directory of maps (with substructure as given in maps):
+        'proj_root': proj_root,  # - root directory of maps (with substructure as given in maps):
         'wav_dir': os.path.join(proj_root, 'Audiodaten'),
         # - directory to store checkpoint files. All files are stored in this directory:
         'checkpoint_root': os.path.join(proj_root, 'Checkpoints', \
