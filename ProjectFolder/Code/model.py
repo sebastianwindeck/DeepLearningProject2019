@@ -106,18 +106,18 @@ class AMTNetwork:
         reshape = Reshape(self.input_shape_channels)(inputs)
 
         # normal convnet layer (have to do one initially to get 64 channels)
-        conv1 = Conv2D(50, (5, 25), activation='tanh', padding='valid', data_format="channels_last")(reshape)
+        conv1 = Conv2D(50, (5, 25), activation='tanh', padding='same', data_format="channels_last")(reshape)
         do1 = Dropout(0.5)(conv1)
         pool1 = MaxPooling2D(pool_size=(1, 3))(do1)
 
-        conv2 = Conv2D(50, (3, 5), activation='tanh', padding='valid', data_format="channels_last")(pool1)
+        conv2 = Conv2D(50, (3, 5), activation='tanh', padding='same', data_format="channels_last")(pool1)
         do2 = Dropout(0.5)(conv2)
         pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
 
         flattened = Flatten()(pool2)
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
-        fc1 = Dense(500, activation='sigmoid')(flattened)
+        fc1 = Dense(1000, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
@@ -161,7 +161,7 @@ class AMTNetwork:
                                           monitor='val_loss', verbose=1, save_best_only=True, mode='min')
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
                                          verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=2, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
