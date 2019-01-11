@@ -49,8 +49,9 @@ if __name__ == '__main__':
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
-        'maxFramesPerFile': 200,  # set to -1 to ignore
-        'maxFrames': 5000  # set to -1 to ignore
+
+        'maxFramesPerFile': 10000,  # set to -1 to ignore
+        'maxFrames': 10000  # set to -1 to ignore
     }  # Feel free to add more parameters if needed.
 
     # derived parameters:
@@ -95,6 +96,8 @@ if __name__ == '__main__':
         at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
+        exit()
+
 
     else:
         at.load(baseModelPath)
