@@ -152,6 +152,7 @@ if __name__ == '__main__':
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         # TODO: probably needs some refinements => look ok for now.
+        noisy_inputs = 
         at.train(inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
 
         y_pred = []
