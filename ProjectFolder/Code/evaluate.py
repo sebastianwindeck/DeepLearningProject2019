@@ -98,19 +98,27 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
 
     if vtype == 'heat':
         g = sns.heatmap(data=data)
+        g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.get_figure()
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'cluster':
         g = sns.clustermap(data=data)
+        g.fig.suptitle('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.fig
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'joint':
         g = sns.jointplot(x=data_v[:, 0], y=data_v[:, 1]).plot_joint(sns.kdeplot, zorder=0, n_levels=6)\
             .set_axis_labels("True", "Pred")
+        g.fig.suptitle('Diagram shows {0} map of {1} epoch'.format(vtype, description))
+        fig = g.fig
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     elif vtype == 'scatter':
         g = sns.scatterplot(x=data_v[:, 0], y=data_v[:, 1], size=data_v[:, 2])
+        fig = g.get_figure()
+        fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
-    g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
-    fig = g.get_figure()
-    fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     plt.show()
     print("Confusion Matrix done.")
 
