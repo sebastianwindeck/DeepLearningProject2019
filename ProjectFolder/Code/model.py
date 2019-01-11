@@ -131,6 +131,7 @@ class AMTNetwork:
         # MT: the best loss function for AMT binary_crossentropy according to 
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
+    def compilation(self):
         self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
