@@ -133,7 +133,6 @@ if __name__ == '__main__':
             #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
             #
 
-            classi_change = 0.00
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
