@@ -25,10 +25,18 @@ if __name__ == '__main__':
         'init_lr': 1e-1, 'lr_decay': 'linear',
 
         # parameters for audio
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False', 'min_midi': 37,
         # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False',
+
+
+        ### FIXED
+        'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
+        ###
+
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
@@ -50,10 +58,11 @@ if __name__ == '__main__':
         'checkpoint_root': os.path.join(proj_root, 'Checkpoints', \
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
-        # "quick-test parameters", such that only a few data samples are used
 
-        'maxFramesPerFile': -1,  # set to -1 to ignore
-        'maxFrames': 1500000  # set to -1 to ignore
+        ### FIXED
+        'maxFramesPerFile': 2000,  # set to -1 to ignore
+        'maxFrames': 10000  # set to -1 to ignore
+        ###
 
     }  # Feel free to add more parameters if needed.
 
@@ -109,9 +118,7 @@ if __name__ == '__main__':
         # initial training, with clean data:
         at.compilation()
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-
         at.save(baseModelPath)
-        exit()
 
 
     else:
@@ -146,10 +153,7 @@ if __name__ == '__main__':
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
 
-            #  TODO: d.	Evaluate performance of classifier based on noise candidate
-            #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
-            #
-            if noise_level > 10e8:
+            if noise_level > 10e8 or noise_level < 10e-8:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
                 break
 
@@ -165,7 +169,6 @@ if __name__ == '__main__':
                 print(noise_level)
                 continue  # Jump to the next cycle
 
-            # while loop fails to NaN for noise level
             print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
             # if we reach this point, the classi_perf is in the defined interval
             # => Exit the while loop and train the amt with the new noisy data
@@ -174,7 +177,6 @@ if __name__ == '__main__':
         noise_levels = np.append(noise_levels, noise_level)
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
-        # TODO: probably needs some refinements => look ok for now.
         this_noise = noise_generator.generate(inputs.shape[0])
         noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
         at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
@@ -188,7 +190,7 @@ if __name__ == '__main__':
             y_true = outputs
             print(y_true.shape)
             final_score(y_pred=y_pred, y_true=y_true, description=str(noiseEpoch))
-            pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
+            #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 
     # Save np array of noise levels
     np.save("noise_levels", noise_levels)
@@ -199,6 +201,6 @@ if __name__ == '__main__':
     #                           1.	F1 score compared to noise level
     #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
     final_score(y_pred=y_pred, y_true=y_true, description='final')
-    pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
+    #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
 
     print("DONE.")

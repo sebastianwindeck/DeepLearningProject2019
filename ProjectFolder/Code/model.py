@@ -2,6 +2,7 @@ import os
 from operator import concat
 
 import numpy as np
+import tensorflow as tf
 from keras import backend as K
 from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
@@ -9,7 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
 from keras.optimizers import SGD
-from keras.utils import plot_model
+from keras.utils import plot_model, multi_gpu_model
 import sklearn
 
 
@@ -139,6 +140,7 @@ class AMTNetwork:
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
 
+
         # MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
 
@@ -157,17 +159,17 @@ class AMTNetwork:
         flattened = Flatten()(pool2)
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
-        fc1 = Dense(500, activation='sigmoid')(flattened)
+
+        fc1 = Dense(400, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
         # fc2 = Dense(200, activation='sigmoid')(do3)
-        fc2 = Dense(200, activation='sigmoid')(do3)
+        fc2 = Dense(100, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
         self.model = Model(inputs=inputs, outputs=outputs)
-
         # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
@@ -181,7 +183,8 @@ class AMTNetwork:
             print('error: could not create png')
 
     def train(self, features, labels, args, epochs=1000, train_descr=''):
-        """ Do training on the provided data set.
+        """
+        Do training on the provided data set.
 
         """
 
@@ -206,14 +209,13 @@ class AMTNetwork:
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=10, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger]
 
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.1)
-
         # self.model.fit_generator(generator=next(trainGen),  #                         steps_per_epoch=trainGen.steps, epochs=epochs,  #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
@@ -271,7 +273,8 @@ class AMTNetwork:
         # load weights into new model
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
-        self.model = loaded_model 
+        with tf.device('/cpu:0'):
+            self.model = loaded_model
 
 
 class Generator:
@@ -300,17 +303,22 @@ class Generator:
 
             self.i += 1
 
+import acoustics
+
+from acoustics.generator import white, pink,blue, brown, violet
+
+import matplotlib.pyplot as plt
+
 
 class Noiser():
     # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
-    #               Start with Gaussian (=white), brown, pink etc.
+    #               Start with Gaussian (=white), pink, blue, brown, violet .
 
-    def __init__(self, noise_size, noise_type="white"):
+    def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type != 'white':
-            print(
-                "WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")  # to be changed once we have other noise types...
+        if self.noise_type.lower()  not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
+            print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
 
     def generate(self, n_noise_samples=1):
         """Generate noise samples.
@@ -323,8 +331,20 @@ class Noiser():
         :return: an np.array with the specified noise
         """
 
-        if self.noise_type == 'white':
-            return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+        #print("noise_type:", self.noise_type, "  noise_size:", self.noise_size)
+        if self.noise_type == 'simplistic':
+            #return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+            return np.random.uniform(0, 1, n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() in {'gaussian', 'white', 'normal'}:  
+            return white(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'pink':
+            return pink(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'blue':
+            return blue(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'brown':
+            return brown(n_noise_samples).reshape(self.noise_size)
+        elif self.noise_type.lower() == 'violet':
+            return violet(n_noise_samples).reshape(self.noise_size)
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
-            return 0
+            return np.zeros((n_noise_samples)).reshape(self.noise_size)
