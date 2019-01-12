@@ -57,8 +57,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': -1,  # set to -1 to ignore
-        'maxFrames': 1500000  # set to -1 to ignore
+        'maxFramesPerFile': 2000,  # set to -1 to ignore
+        'maxFrames': 10000  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -115,9 +115,7 @@ if __name__ == '__main__':
         # initial training, with clean data:
         at.compilation()
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-
         at.save(baseModelPath)
-        exit()
 
 
     else:
@@ -176,7 +174,6 @@ if __name__ == '__main__':
         noise_levels = np.append(noise_levels, noise_level)
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
-        # TODO: probably needs some refinements => look ok for now.
         this_noise = noise_generator.generate(inputs.shape[0])
         noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
         at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
