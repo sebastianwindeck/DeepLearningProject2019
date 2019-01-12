@@ -22,7 +22,7 @@ def extract_features(audio_filename, args):
     :param args: a dictionary containing the parameters. This function needs the parameters 'featType'
     :return: an np.ndarray with the requested features. shape[0] is the time dimension
     """
-    print("Extract_features")
+    #print("Extract_features")
     spec_type = args['spec_type']
 
     if spec_type == 'cqt':
@@ -182,8 +182,7 @@ def prepareData(args):
                         # extract_features
                         audio_filename = os.path.join(dp, audio_filename)
                         inputnp = extract_features(audio_filename, args)
-                        times = librosa.frames_to_time(np.arange(inputnp.shape[0]),
-                                                       sr=sr, hop_length=hop_length)
+                        times = librosa.frames_to_time(np.arange(inputnp.shape[0]), sr=sr, hop_length=hop_length)
                         # mid2outputnp
                         mid_fn = os.path.join(dp, mid_fn)
                         pm_mid = pretty_midi.PrettyMIDI(mid_fn)
@@ -192,7 +191,7 @@ def prepareData(args):
 
                         # check that num onsets is equal
                         if inputnp.shape[0] == outputnp.shape[0]:
-                            print("adding to dataset fprefix {}".format(fprefix))
+                            #print("adding to dataset fprefix {}".format(fprefix))
                             addCnt += 1
                             if inputnp.shape[0] > maxFramesPerFile > 0:
                                 inputnp = inputnp[:maxFramesPerFile]
@@ -238,5 +237,6 @@ def prepareData(args):
         del mmo
 
     return inputs, outputs, datapath
+
 
 # End audio stuff

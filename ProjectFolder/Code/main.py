@@ -3,6 +3,8 @@ import inspect
 import os
 
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from evaluate import pitch_confusion, final_score
 from extractfeatures import prepareData
@@ -31,7 +33,7 @@ if __name__ == '__main__':
 
         # training parameters: ==> currently just some random numbers...
         'train_basemodel' : True,
-        'epochs_on_clean': 100, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
+        'epochs_on_clean': 1000, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
         # just a random value...
         'max_difficulty_on_noisy': 0.1,  # just a random value...
 
@@ -50,8 +52,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
 
-        'maxFramesPerFile': 1000,  # set to -1 to ignore
-        'maxFrames': 20000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': -1  # set to -1 to ignore
 
     }  # Feel free to add more parameters if needed.
 
@@ -86,6 +88,17 @@ if __name__ == '__main__':
     # - icqt is not perfect, but should be sufficiently good to describe e.g. the frequency distribution of the noise.
     # => ANGENOMMEN
     inputs, outputs, datapath = prepareData(args)
+    print("Inputs have shape: ", inputs.shape)
+    print("Outputs have shape: ", outputs.shape)
+    print("Total number of notes detected in input set ", np.sum(inputs))
+    print("Number of different values in input set: ", np.unique(inputs))
+    #sums = np.sum(inputs, axis=1)
+    #sns.heatmap(sums)
+    #plt.show()
+
+
+    #sns.pointplot(y=inputs[5,5,:], x=np.arange(inputs.shape[]))
+    #plt.show()
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
@@ -95,7 +108,7 @@ if __name__ == '__main__':
     if args['train_basemodel']:
         # initial training, with clean data:
         at.compilation()
-        at.train(inputs, outputs, epochs=args['epochs_on_clean'], train_descr='initial')
+        at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
 
         at.save(baseModelPath)
         exit()
@@ -164,7 +177,8 @@ if __name__ == '__main__':
         # TODO: probably needs some refinements => look ok for now.
         this_noise = noise_generator.generate(inputs.shape[0])
         noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
-        at.train(noisy_inputs, outputs, args['epochs_on_noisy'], train_descr='noisy_iter_' + str(noiseEpoch))
+        at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
+                 train_descr='noisy_iter_' + str(noiseEpoch))
 
         if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
             y_pred = at.transcribe(noisy_inputs)
