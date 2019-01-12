@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
         # training parameters: ==> currently just some random numbers...
         'train_basemodel' : True,
-        'epochs_on_clean': 100, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
+        'epochs_on_clean': 1000, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
         # just a random value...
         'max_difficulty_on_noisy': 0.1,  # just a random value...
 
@@ -50,8 +50,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
         # "quick-test parameters", such that only a few data samples are used
 
-        'maxFramesPerFile': 1000,  # set to -1 to ignore
-        'maxFrames': 20000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': 1500000  # set to -1 to ignore
 
     }  # Feel free to add more parameters if needed.
 

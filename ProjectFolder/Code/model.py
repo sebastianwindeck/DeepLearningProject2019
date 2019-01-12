@@ -162,7 +162,7 @@ class AMTNetwork:
                                           monitor='val_loss', verbose=1, save_best_only=True, mode='min', period=20)
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
                                          verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=50, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
