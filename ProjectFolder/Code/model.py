@@ -171,18 +171,9 @@ class AMTNetwork:
             self.model = Model(inputs=inputs, outputs=outputs)
         # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        try:
-            self.parallel_model = multi_gpu_model(self.model, gpus=8)
-        except:
-            print("No GPUs found.")
 
     def compilation(self):
-        try:
-            self.parallel_model = multi_gpu_model(self.model, gpus=8)
-            self.parallel_model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
-        except:
-            print('WARNING: No GPUs found. Train on CPUs.')
-            self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
+        self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
@@ -216,18 +207,12 @@ class AMTNetwork:
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=10, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger]
 
-        try:
-            self.parallel_model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
-                       validation_split=0.1)
-        except:
-            print('WARNING: Train on CPUs.')
-            exit()
-            self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
+        self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.1)
         # self.model.fit_generator(generator=next(trainGen),  #                         steps_per_epoch=trainGen.steps, epochs=epochs,  #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
 
