@@ -168,7 +168,7 @@ class AMTNetwork:
 
         self.model = Model(inputs=inputs, outputs=outputs)
 
-        # MT: the best loss function for AMT binary_crossentropy according to 
+        # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
     def compilation(self):
@@ -209,8 +209,7 @@ class AMTNetwork:
                                           monitor='val_loss', verbose=1, save_best_only=True, mode='min', period=20)
         checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
                                          verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=1, mode='min')
-        #t = Threshold(valGen)
+        early_stop = EarlyStopping(patience=50, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
 
