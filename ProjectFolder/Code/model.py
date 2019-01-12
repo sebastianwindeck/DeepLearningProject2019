@@ -13,10 +13,6 @@ from keras.utils import plot_model
 import sklearn
 
 
-# AS: not needed
-# from ProjectFolder.Code.configuration import load_config
-
-
 def opt_thresholds(y_true, y_scores):
     othresholds = np.zeros(y_scores.shape[1])
     print(othresholds.shape)
@@ -172,7 +168,8 @@ class AMTNetwork:
 
         self.model = Model(inputs=inputs, outputs=outputs)
 
-        # MT: the best loss function for AMT binary_crossentropy according to  # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        # MT: the best loss function for AMT binary_crossentropy according to
+        # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
     def compilation(self):
         self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
@@ -197,7 +194,6 @@ class AMTNetwork:
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root, train_descr + 'training.log'))
 
-        # how does the learning rate change over time?
         if self.lr_decay == 'linear':
             decay = LinearDecay(self.init_lr, epochs)
         else:
@@ -275,7 +271,7 @@ class AMTNetwork:
         # load weights into new model
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
-        self.model = loaded_model  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+        self.model = loaded_model 
 
 
 class Generator:
