@@ -159,16 +159,16 @@ class AMTNetwork:
         flattened = Flatten()(pool2)
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
-        fc1 = Dense(1000, activation='sigmoid')(flattened)
+        fc1 = Dense(400, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
         # fc2 = Dense(200, activation='sigmoid')(do3)
-        fc2 = Dense(200, activation='sigmoid')(do3)
+        fc2 = Dense(100, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
-        with tf.device('/cpu:0'):
-            self.model = Model(inputs=inputs, outputs=outputs)
+
+        self.model = Model(inputs=inputs, outputs=outputs)
         # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
