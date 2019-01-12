@@ -8,7 +8,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
-from keras.optimizers import Adam, SGD
+from keras.optimizers import SGD
 from keras.utils import plot_model
 import sklearn
 
@@ -194,7 +194,7 @@ class AMTNetwork:
 
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
-        csv_logger = CSVLogger(os.path.join(self.checkpoint_root + train_descr + 'training.log'))
+        csv_logger = CSVLogger(os.path.join(self.checkpoint_root, train_descr + 'training.log'))
 
         # how does the learning rate change over time?
         if self.lr_decay == 'linear':
@@ -206,12 +206,14 @@ class AMTNetwork:
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5',
-                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min', period=20)
-        checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
-                                         verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=50, monitor='val_loss', verbose=1, mode='min')
+                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min', period)
+        #checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
+                                         #verbose=1, mode='min', period=50)
+        early_stop = EarlyStopping(patience=10, monitor='val_loss', verbose=1, mode='min')
 
-        callbacks = [checkpoint_best, checkpoint_nth, early_stop, decay, csv_logger]
+        callbacks = [checkpoint_best,
+                     #checkpoint_nth,
+                     early_stop, decay, csv_logger]
 
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                                 validation_split=0.1)
