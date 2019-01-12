@@ -25,10 +25,15 @@ if __name__ == '__main__':
         'init_lr': 1e-1, 'lr_decay': 'linear',
 
         # parameters for audio
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False', 'min_midi': 21,
-        # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
-        'max_midi': 108,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False',
+
+
+        ### FIXED
+        'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+        'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
+        ###
+
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
@@ -50,10 +55,11 @@ if __name__ == '__main__':
         'checkpoint_root': os.path.join(proj_root, 'Checkpoints', \
                                         'train' + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')),
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
-        # "quick-test parameters", such that only a few data samples are used
 
+        ### FIXED
         'maxFramesPerFile': -1,  # set to -1 to ignore
         'maxFrames': 1500000  # set to -1 to ignore
+        ###
 
     }  # Feel free to add more parameters if needed.
 
@@ -146,10 +152,7 @@ if __name__ == '__main__':
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
 
-            #  TODO: d.	Evaluate performance of classifier based on noise candidate
-            #  TODO: [Malte] funktion besteht, muss hier aufgerufen werden. Intervall des gesuchten Noise-Veränderung festlegen durch Probieren.
-            #
-            if noise_level > 10e8:
+            if noise_level > 10e8 or noise_level < 10e-8:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
                 break
 
@@ -165,7 +168,6 @@ if __name__ == '__main__':
                 print(noise_level)
                 continue  # Jump to the next cycle
 
-            # while loop fails to NaN for noise level
             print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
             # if we reach this point, the classi_perf is in the defined interval
             # => Exit the while loop and train the amt with the new noisy data
