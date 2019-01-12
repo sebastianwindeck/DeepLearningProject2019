@@ -157,7 +157,7 @@ class AMTNetwork:
         flattened = Flatten()(pool2)
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
-        fc1 = Dense(1000, activation='sigmoid')(flattened)
+        fc1 = Dense(500, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
