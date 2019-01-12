@@ -118,7 +118,7 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
     else:
         print("Warning the selected visualization type does not exists. "
               "Please select either 'heat' or 'cluster' for type.")
-    plt.show()
+    #plt.show()
     print("Confusion Matrix done.")
 
 
