@@ -188,7 +188,7 @@ if __name__ == '__main__':
             y_true = outputs
             print(y_true.shape)
             final_score(y_pred=y_pred, y_true=y_true, description=str(noiseEpoch))
-            pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
+            #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 
     # Save np array of noise levels
     np.save("noise_levels", noise_levels)
@@ -199,6 +199,6 @@ if __name__ == '__main__':
     #                           1.	F1 score compared to noise level
     #                           2.	Confusion matrix (heat maps, for e.g. 4 noise levels)
     final_score(y_pred=y_pred, y_true=y_true, description='final')
-    pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
+    #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description='final')
 
     print("DONE.")

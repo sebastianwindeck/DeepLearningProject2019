@@ -1,4 +1,5 @@
-bsub -n 1 -W 4:00 -R "rusage[mem=8192]" python DeepLearningProject/ProjectFolder/Code/main.py
+bsub -n 1 -W 4:00 -R "rusage[mem=8192]" python main.py
+bsub -n 20 -W 4:00 -R "rusage[mem=32768,ngpus_excl_p=8]" python main.py
 bqueues
 # -W 4:00 or 24:00
 # -R -R "rusage[mem=xxx]" -- xxx MB per kernel

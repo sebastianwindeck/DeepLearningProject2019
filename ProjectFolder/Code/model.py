@@ -2,6 +2,7 @@ import os
 from operator import concat
 
 import numpy as np
+import tensorflow as tf
 from keras import backend as K
 from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
@@ -9,7 +10,7 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
 from keras.optimizers import SGD
-from keras.utils import plot_model
+from keras.utils import plot_model, multi_gpu_model
 import sklearn
 
 
@@ -139,6 +140,7 @@ class AMTNetwork:
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
 
+
         # MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
 
@@ -165,14 +167,22 @@ class AMTNetwork:
         fc2 = Dense(200, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
-
-        self.model = Model(inputs=inputs, outputs=outputs)
-
+        with tf.device('/cpu:0'):
+            self.model = Model(inputs=inputs, outputs=outputs)
         # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        try:
+            self.parallel_model = multi_gpu_model(self.model, gpus=8)
+        except:
+            print("No GPUs found.")
 
     def compilation(self):
-        self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
+        try:
+            self.parallel_model = multi_gpu_model(self.model, gpus=8)
+            self.parallel_model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
+        except:
+            print('WARNING: No GPUs found. Train on CPUs.')
+            self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
@@ -211,9 +221,14 @@ class AMTNetwork:
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger]
 
-        self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
+        try:
+            self.parallel_model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.1)
-
+        except:
+            print('WARNING: Train on CPUs.')
+            exit()
+            self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
+                       validation_split=0.1)
         # self.model.fit_generator(generator=next(trainGen),  #                         steps_per_epoch=trainGen.steps, epochs=epochs,  #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
@@ -271,7 +286,8 @@ class AMTNetwork:
         # load weights into new model
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
-        self.model = loaded_model 
+        with tf.device('/cpu:0'):
+            self.model = loaded_model
 
 
 class Generator:
