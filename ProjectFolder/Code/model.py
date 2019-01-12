@@ -12,27 +12,29 @@ from keras.optimizers import SGD
 from keras.utils import plot_model
 import sklearn
 
+
 # AS: not needed
 # from ProjectFolder.Code.configuration import load_config
 
 
-def opt_thresholds(y_true,y_scores):
+def opt_thresholds(y_true, y_scores):
     othresholds = np.zeros(y_scores.shape[1])
     print(othresholds.shape)
-    for label, (label_scores, true_bin) in enumerate(zip(y_scores.T,y_true.T)):
-        #print label
+    for label, (label_scores, true_bin) in enumerate(zip(y_scores.T, y_true.T)):
+        # print label
         precision, recall, thresholds = sklearn.metrics.precision_recall_curve(true_bin, label_scores)
         max_f1 = 0
         max_f1_threshold = .5
         for r, p, t in zip(recall, precision, thresholds):
             if p + r == 0: continue
-            if (2*p*r)/(p + r) > max_f1:
-                max_f1 = (2*p*r)/(p + r)
+            if (2 * p * r) / (p + r) > max_f1:
+                max_f1 = (2 * p * r) / (p + r)
                 max_f1_threshold = t
-        #print label, ": ", max_f1_threshold, "=>", max_f1
+        # print label, ": ", max_f1_threshold, "=>", max_f1
         othresholds[label] = max_f1_threshold
         print(othresholds)
     return othresholds
+
 
 class LinearDecay(Callback):
     # Define a linear pattern for the decay of the learning rate.
@@ -63,26 +65,28 @@ class HalfDecay(Callback):
         print("hd: learning rate is now " + str(lr))
         K.set_value(self.model.optimizer.lr, lr)
 
+
 class Threshold(Callback):
     '''
         decay = decay value to subtract each epoch
     '''
+
     def __init__(self, val_data):
         super(Threshold, self).__init__()
         self.val_data = val_data
-        _,y = val_data
+        _, y = val_data
         print(y)
-        self.othresholds = np.full(y.shape[1],0.5)
+        self.othresholds = np.full(y.shape[1], 0.5)
 
     def on_epoch_end(self, epoch, logs={}):
-        #find optimal thresholds on validation data
-        x,y_true = self.val_data
+        # find optimal thresholds on validation data
+        x, y_true = self.val_data
         y_scores = self.model.predict(x)
-        self.othresholds = opt_thresholds(y_true,y_scores)
+        self.othresholds = opt_thresholds(y_true, y_scores)
         y_pred = y_scores > self.othresholds
-        p,r,f,s = sklearn.metrics.precision_recall_fscore_support(y_true,y_pred,average='micro')
+        p, r, f, s = sklearn.metrics.precision_recall_fscore_support(y_true, y_pred, average='micro')
         print("validation p,r,f,s:")
-        print(p,r,f,s)
+        print(p, r, f, s)
 
 
 def f1(y_true, y_pred):
@@ -168,8 +172,7 @@ class AMTNetwork:
 
         self.model = Model(inputs=inputs, outputs=outputs)
 
-        # MT: the best loss function for AMT binary_crossentropy according to
-        # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
+        # MT: the best loss function for AMT binary_crossentropy according to  # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
     def compilation(self):
         self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
@@ -180,8 +183,6 @@ class AMTNetwork:
         except:
             print('error: could not create png')
 
-
-
     def train(self, features, labels, args, epochs=1000, train_descr=''):
         """ Do training on the provided data set.
 
@@ -189,8 +190,8 @@ class AMTNetwork:
 
         batch_size = 256
 
-        #trainGen = Generator(features,labels, batch_size, args)
-        #valGen = Generator(features, labels, batch_size, args)
+        # trainGen = Generator(features,labels, batch_size, args)
+        # valGen = Generator(features, labels, batch_size, args)
 
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
@@ -205,22 +206,19 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5',
-                                          monitor='val_loss', verbose=1, save_best_only=True, mode='min', period)
-        #checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
-                                         #verbose=1, mode='min', period=50)
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5', monitor='val_loss', verbose=1,
+                                          save_best_only=True, mode='min')
+        # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
+        # verbose=1, mode='min', period=50)
         early_stop = EarlyStopping(patience=10, monitor='val_loss', verbose=1, mode='min')
 
-        callbacks = [checkpoint_best,
-                     #checkpoint_nth,
+        callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger]
 
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
-                                validation_split=0.1)
+                       validation_split=0.1)
 
-        #self.model.fit_generator(generator=next(trainGen),
-        #                         steps_per_epoch=trainGen.steps, epochs=epochs,
-        #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
+        # self.model.fit_generator(generator=next(trainGen),  #                         steps_per_epoch=trainGen.steps, epochs=epochs,  #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
 
         # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
 
@@ -249,10 +247,10 @@ class AMTNetwork:
         res_old = self.model.evaluate(x_old, y_true)[0]
         dif = res_new - res_old
         dif_percent = dif / res_old
-        #print("neues Loss", res_new)
-        #print("altes Loss", res_old)
-        #print("loss has increased by", dif, "absolute")
-        #print("loss has increased by", dif_percent, "percent")
+        # print("neues Loss", res_new)
+        # print("altes Loss", res_old)
+        # print("loss has increased by", dif, "absolute")
+        # print("loss has increased by", dif_percent, "percent")
 
         return dif_percent
 
@@ -277,9 +275,7 @@ class AMTNetwork:
         # load weights into new model
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
-        self.model = loaded_model
-        # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.
-        #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
+        self.model = loaded_model  # Sollte das laden des Modells gleich das Compilieren beinhalten? => JA.  #  Eventually compile loaded model directly in the function or to split it to the init function with IF-clause
 
 
 class Generator:
@@ -292,7 +288,7 @@ class Generator:
         self.batch_size = batch_size
         self.window_size = args['window_size']
 
-        self.steps = features.shape[0]//batch_size
+        self.steps = features.shape[0] // batch_size
         self.i = 0
 
     def __next__(self):
@@ -307,7 +303,6 @@ class Generator:
             yield batch_features[self.i], batch_labels[self.i]
 
             self.i += 1
-
 
 
 class Noiser():
