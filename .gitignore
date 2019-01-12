@@ -109,17 +109,23 @@ venv.bak/
 # Data
 MAPS
 
-# ignore music data files:
+# ignore music and data files:
 *.mid
 *.wav
 *.dat
 *.h5
+
+
 foreignCode\wav2mid\ma*
 foreignCode\wav2mid\wav2mid-master\data
 foreignCode\wav2mid\wav2mid-master\examples
 foreignCode\wav2mid\wav2mid-master\models
 foreignCode\wav2mid\wav2mid-master\notebooks
 
+# Ignore Project samples
 ProjectFolder/Audiodaten
 ProjectFolder/Basemodel
 ProjectFolder/Checkpoints
+
+# ignore report files
+*lsf.o*
