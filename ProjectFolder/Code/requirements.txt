@@ -1,6 +1,7 @@
 # TODO: [Andreas] filter the requirements on only needed requirements --> create virtualenv and check.
 
 absl-py==0.6.1
+acoustices==0.1.2
 alabaster==0.7.12
 asn1crypto==0.24.0
 astor==0.7.1
