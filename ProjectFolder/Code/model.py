@@ -182,7 +182,8 @@ class AMTNetwork:
             print('error: could not create png')
 
     def train(self, features, labels, args, epochs=1000, train_descr=''):
-        """ Do training on the provided data set.
+        """
+        Do training on the provided data set.
 
         """
 
