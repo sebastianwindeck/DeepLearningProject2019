@@ -13,7 +13,10 @@ from keras.optimizers import SGD
 from keras.utils import plot_model
 
 import sklearn
+from sklearn.utils.class_weight import compute_class_weight
+
 from acoustics.generator import white, pink,blue, brown, violet
+
 import matplotlib.pyplot as plt
 
 
@@ -126,6 +129,30 @@ def f1(y_true, y_pred):
     recall = recall(y_true, y_pred)
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
+def calculating_class_weights(y_true):
+    print(np.unique(y_true))
+    number_dim = np.shape(y_true)[1]  # columns
+    weights = np.empty([number_dim, 2])  # empty array
+    for i in range(number_dim):
+        print(i)
+        #print(np.unique(y_true[:, i]))
+        try:
+            weights[i] = compute_class_weight('balanced', classes=[0, 1], y=y_true[:, i])
+        except:
+            weights[i] = np.array([1, 1])
+        print(i, ": ", weights[i])
+    return weights
+
+
+def get_weighted_loss(weights):
+    def weighted_loss(y_true, y_pred):
+        return K.mean(
+            (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),
+            axis=-1)
+
+    return weighted_loss
+
+
 
 class AMTNetwork:
     def __init__(self, args):
@@ -148,7 +175,7 @@ class AMTNetwork:
         self.init_lr = args['init_lr']
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
-
+        self.balance_classes = args['balance_classes']
 
         # MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
         # sigmoid for output layer
@@ -182,14 +209,17 @@ class AMTNetwork:
         # MT: the best loss function for AMT binary_crossentropy according to
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
-    def compilation(self):
-        self.model.compile(loss='binary_crossentropy', optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
+
+    def compilation(self, y_true):
+        weights = calculating_class_weights(y_true=y_true)
+        self.model.compile(loss=get_weighted_loss(weights), optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
             plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
         except:
             print('error: could not create png')
+
 
     def train(self, features, labels, args, epochs=1000, train_descr=''):
         """
@@ -223,8 +253,12 @@ class AMTNetwork:
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger]
 
+        # class_weights = NULL
+        # self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
+        # validation_split=0.1, class_weight=class_weights)
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.1)
+
         # self.model.fit_generator(generator=next(trainGen),
         #                         steps_per_epoch=trainGen.steps, epochs=epochs,
         #                        verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)

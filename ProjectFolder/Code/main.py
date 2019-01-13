@@ -28,7 +28,7 @@ if __name__ == '__main__':
         # parameters for audio
         'sr': 16000,
         'spec_type': 'cqt',
-        'bin_multiple': 12,  # bin_multiple fix to 36
+        'bin_multiple': 3,
         'residual': 'False',
         'hop_length': 512,
 
@@ -54,6 +54,7 @@ if __name__ == '__main__':
         'noise_initial_level': 0.001,  # just a random value...
         'noise_increase_factor': 1.5,  # just a random value...
         'noise_decrease_factor': 1.5,  # just a random value...
+        'balance_classes': True,
 
         # directories:
         'proj_root': proj_root,  # - root directory of maps (with substructure as given in maps):
@@ -104,7 +105,13 @@ if __name__ == '__main__':
     print("Inputs have shape: ", inputs.shape)
     print("Outputs have shape: ", outputs.shape)
     print("Total number of notes detected in input set ", np.sum(inputs))
-    print("Number of different values in input set: ", np.unique(inputs))
+    #print("Number of different values in input set: ", np.unique(inputs))
+    print("Number of 1s in output: ", sum(sum(outputs==1)))
+    print("Number of 0s in output: ", sum(sum(outputs==0)))
+    print("Size of outputs: ", outputs.size)
+    print("=> 1s should be weighted ", sum(sum(outputs==0))/sum(sum(outputs==1)))
+    # NOT WORKING: np.histogram(outputs.sum(axis=1), bins=(-0.5:20.5:1))
+    #print("Number of ")
     #sums = np.sum(inputs, axis=1)
     #sns.heatmap(sums)
     #plt.show()
@@ -120,12 +127,12 @@ if __name__ == '__main__':
     evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
     if args['train_basemodel']:
         # initial training, with clean data:
-        at.compilation()
+        at.compilation(outputs)
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
         exit()
     else:
         at.load(baseModelPath)
-        at.compilation()
+        at.compilation(outputs)
     # initialize noiser:
     noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 

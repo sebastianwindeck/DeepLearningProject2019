@@ -251,3 +251,51 @@ def prepareData(args):
 
 
 # End audio stuff
+
+def take_every_second(args):
+    """reduce size of data by taking only every other sample.
+
+    :param args: Argument dictionary as used in all our functions.
+    :return: input and output with reduced size
+    """
+
+    max_midi = args['max_midi']
+    min_midi = args['min_midi']
+    note_range = max_midi - min_midi + 1
+    window_size = args['window_size']
+    bin_multiple = args['bin_multiple']
+    n_bins = note_range * bin_multiple
+
+    datapath = os.path.join(args['proj_root'], 'Features')
+    maxFramesPerFile = args['maxFramesPerFile']
+    maxFrames = args['maxFrames']
+    fileappend = str(maxFramesPerFile) + 'pf_max' + str(maxFrames)
+
+    filenameIN = os.path.join(datapath, 'input_' + fileappend + '.dat')
+    filenameOUT = os.path.join(datapath, 'output_' + fileappend + '.dat')
+
+    filenameIN2 = os.path.join(datapath, 'input_' + fileappend + '_Every2.dat')
+    filenameOUT2 = os.path.join(datapath, 'output_' + fileappend + '_Every2.dat')
+
+    mmi = np.memmap(filenameIN, mode='r', dtype="float64")
+    inputs = np.reshape(mmi, (-1, window_size, n_bins))
+    inputs = inputs[ ::2, ]
+
+    mmi = np.memmap(filename=filenameIN, mode='r', shape=inputs.shape, dtype="float64")
+    mmi[:] = inputs[:]
+
+    mmi2 = np.memmap(filename=filenameIN2, mode='w+', shape=inputs.shape, dtype="float64")
+    mmi2[:] = inputs[:]
+    del mmi
+    del mmi2
+
+    mmo = np.memmap(filenameOUT, mode='r', dtype="float64")
+    outputs = np.reshape(mmo, (-1, note_range))
+    outputs = outputs[ ::2, ]
+
+    mmo2 = np.memmap(filename=filenameOUT2, mode='w+', shape=outputs.shape, dtype="float64")
+    mmo2[:] = outputs[:]
+    del mmo
+    del mmo2
+
+    return inputs, outputs
