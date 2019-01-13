@@ -22,17 +22,17 @@ if __name__ == '__main__':
     # Define a parameter structure args
     args = {  # model parameters:
         'model_name': 'baseline',  # für init lr geht auch 0.1
-        'init_lr': 1e-1, 'lr_decay': 'linear',
+        'init_lr': 1e-1,
+        'lr_decay': 'linear',
 
         # parameters for audio
-        # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
-
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False',
-
+        'sr': 16000,
+        'spec_type': 'cqt',
+        'bin_multiple': 12,
+        'residual': 'False',
 
         ### FIXED
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
-
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
         ###
@@ -40,13 +40,16 @@ if __name__ == '__main__':
         'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
-        'train_basemodel' : True,
-        'epochs_on_clean': 1000, 'epochs_on_noisy': 10, 'noise_epochs': 20, 'min_difficulty_on_noisy': 0.05,
-        # just a random value...
-        'max_difficulty_on_noisy': 0.1,  # just a random value...
+        'train_basemodel': True,
+        'epochs_on_clean': 1000,
+        'epochs_on_noisy': 10,
+        'noise_epochs': 20,
+        'min_difficulty_on_noisy': 0.05,  # just a random value...
+        'max_difficulty_on_noisy': 0.10,  # just a random value...
 
         # noise parameters:
-        'noise_type': 'simplistic', 'noise_frames_per_epoch': 20,  # just a random value...
+        'noise_type': 'simplistic',
+        'noise_frames_per_epoch': 20,  # just a random value...
         'noise_initial_level': 0.001,  # just a random value...
         'noise_increase_factor': 1.5,  # just a random value...
         'noise_decrease_factor': 1.5,  # just a random value...
@@ -61,7 +64,7 @@ if __name__ == '__main__':
 
         ### FIXED
         'maxFramesPerFile': 2000,  # set to -1 to ignore
-        'maxFrames': 10000  # set to -1 to ignore
+        'maxFrames': 150000  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -149,6 +152,7 @@ if __name__ == '__main__':
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[idx] + noise_level * this_noise
+            # AS: ich verstehe die Logik dieser noise_levels nicht. Wird oben mit 0 initialisiert??
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)

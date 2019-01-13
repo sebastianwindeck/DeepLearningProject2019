@@ -148,11 +148,11 @@ class AMTNetwork:
         reshape = Reshape(self.input_shape_channels)(inputs)
 
         # normal convnet layer (have to do one initially to get 64 channels)
-        conv1 = Conv2D(50, (5, 25), activation='tanh', padding='same', data_format="channels_last")(reshape)
+        conv1 = Conv2D(50, (5, 25), activation='relu', padding='same', data_format="channels_last")(reshape)
         do1 = Dropout(0.5)(conv1)
         pool1 = MaxPooling2D(pool_size=(1, 3))(do1)
 
-        conv2 = Conv2D(50, (3, 5), activation='tanh', padding='same', data_format="channels_last")(pool1)
+        conv2 = Conv2D(50, (3, 5), activation='relu', padding='same', data_format="channels_last")(pool1)
         do2 = Dropout(0.5)(conv2)
         pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
 
@@ -216,9 +216,15 @@ class AMTNetwork:
 
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.1)
-        # self.model.fit_generator(generator=next(trainGen),  #                         steps_per_epoch=trainGen.steps, epochs=epochs,  #      verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
+        # self.model.fit_generator(generator=next(trainGen),
+        #                         steps_per_epoch=trainGen.steps, epochs=epochs,
+        #                        verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
 
-        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den  # Files). Für uns ist das wohl nicht sinnvoll.  # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,  #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),  #                              callbacks=callbacks)
+        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
+        # Files). Für uns ist das wohl nicht sinnvoll.
+        # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
+        #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
+        #                              callbacks=callbacks)
 
     def transcribe(self, x):
 
@@ -305,7 +311,7 @@ class Generator:
 
 import acoustics
 
-from acoustics.generator import white, pink,blue, brown, violet
+from acoustics.generator import white, pink, blue, brown, violet
 
 import matplotlib.pyplot as plt
 
@@ -317,7 +323,7 @@ class Noiser():
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type.lower()  not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
+        if self.noise_type.lower() not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
             print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
 
     def generate(self, n_noise_samples=1):
@@ -334,7 +340,9 @@ class Noiser():
         #print("noise_type:", self.noise_type, "  noise_size:", self.noise_size)
         if self.noise_type == 'simplistic':
             #return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
-            return np.random.uniform(0, 1, n_noise_samples).reshape(self.noise_size)
+            # Modified AS
+            return np.random.uniform(0, 1,  size=concat([n_noise_samples], list(self.noise_size)))
+            # return np.random.uniform(0, 1, n_noise_samples).reshape(self.noise_size)
         elif self.noise_type.lower() in {'gaussian', 'white', 'normal'}:  
             return white(n_noise_samples).reshape(self.noise_size)
         elif self.noise_type.lower() == 'pink':

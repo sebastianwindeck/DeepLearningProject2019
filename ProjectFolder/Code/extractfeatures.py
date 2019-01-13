@@ -146,10 +146,10 @@ def prepareData(args):
     if os.path.isfile(filenameIN) and os.path.isfile(filenameOUT):
         n_bins = note_range * bin_multiple
         print('loading precomputed data from ' + filenameIN)
-        mmi = np.memmap(filenameIN, mode='r')
+        mmi = np.memmap(filenameIN, mode='r', dtype="float64")
         inputs = np.reshape(mmi, (-1, window_size, n_bins))
 
-        mmo = np.memmap(filenameOUT, mode='r')
+        mmo = np.memmap(filenameOUT, mode='r', dtype="float64")
         outputs = np.reshape(mmo, (-1, note_range))
 
         return inputs, outputs, datapath
@@ -192,6 +192,17 @@ def prepareData(args):
                         # check that num onsets is equal
                         if inputnp.shape[0] == outputnp.shape[0]:
                             #print("adding to dataset fprefix {}".format(fprefix))
+
+                            # => add AS: Some filtering highly pragmatic filtering on the data!!
+                            # take only frames that are "sufficiently loud", ...
+                            good2take = np.array(inputnp.max(axis=(1, 2)) > 0.05)
+                            # ... and always omit the last frame as this has been padded ...
+                            good2take[-1] = False  # omit last
+                            # ... and only take frames with at least one true label (i.e. some tone is played)
+                            good2take = good2take & (outputnp.max(axis=1) > 0)
+                            outputnp = outputnp[good2take, ]
+                            inputnp = inputnp[good2take, ]
+
                             addCnt += 1
                             if inputnp.shape[0] > maxFramesPerFile > 0:
                                 inputnp = inputnp[:maxFramesPerFile]
@@ -229,9 +240,9 @@ def prepareData(args):
         print(inputs.shape)
         print("outputs.shape")
         print(outputs.shape)
-        mmi = np.memmap(filename=filenameIN, mode='w+', shape=inputs.shape)
+        mmi = np.memmap(filename=filenameIN, mode='w+', shape=inputs.shape, dtype="float64")
         mmi[:] = inputs[:]
-        mmo = np.memmap(filename=filenameOUT, mode='w+', shape=outputs.shape)
+        mmo = np.memmap(filename=filenameOUT, mode='w+', shape=outputs.shape, dtype="float64")
         mmo[:] = outputs[:]
         del mmi
         del mmo
