@@ -353,11 +353,12 @@ class Generator:
             self.i += 1
 
 
-class Noiser:
+class Noiser():
+
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type.lower() not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
+        if self.noise_type.lower()  not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
             print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
 
     def generate(self, n_noise_samples=1):
@@ -371,22 +372,21 @@ class Noiser:
         :return: an np.array with the specified noise
         """
 
-        #print("noise_type:", self.noise_type, "  noise_size:", self.noise_size)
+        n = n_noise_samples * self.noise_size[0] * self.noise_size[1]
+        s = concat([n_noise_samples], list(self.noise_size))
         if self.noise_type == 'simplistic':
-            #return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
-            # Modified AS
-            return np.random.uniform(0, 1,  size=concat([n_noise_samples], list(self.noise_size)))
-            # return np.random.uniform(0, 1, n_noise_samples).reshape(self.noise_size)
-        elif self.noise_type.lower() in {'gaussian', 'white', 'normal'}:  
-            return white(n_noise_samples).reshape(self.noise_size)
+            return np.random.uniform(0, 1, size=concat([n_noise_samples], list(self.noise_size)))
+        elif self.noise_type.lower() in {'gaussian', 'white', 'normal'}:
+            return np.reshape(white(n), s)
         elif self.noise_type.lower() == 'pink':
-            return pink(n_noise_samples).reshape(self.noise_size)
+            return np.reshape(pink(n), s)
         elif self.noise_type.lower() == 'blue':
-            return blue(n_noise_samples).reshape(self.noise_size)
+            return np.reshape(blue(n), s)
         elif self.noise_type.lower() == 'brown':
-            return brown(n_noise_samples).reshape(self.noise_size)
+            return np.reshape(brown(n), s)
         elif self.noise_type.lower() == 'violet':
-            return violet(n_noise_samples).reshape(self.noise_size)
+            return np.reshape(violet(n), s)
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
-            return np.zeros((n_noise_samples)).reshape(self.noise_size)
+            return np.reshape(np.zeros((n)), s)
+
