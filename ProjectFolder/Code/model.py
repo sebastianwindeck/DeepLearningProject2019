@@ -11,10 +11,17 @@ from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
 from keras.optimizers import SGD
 from keras.utils import plot_model
+
 import sklearn
 from acoustics.generator import white, pink,blue, brown, violet
 import matplotlib.pyplot as plt
 
+
+def hn_multilabel_loss(y_true, y_pred):
+    # Avoid divide by 0
+    y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+    # Multi-task loss
+    return K.mean(K.sum(- y_true * K.log(y_pred) - (1 - y_true) * K.log(1 - y_pred), axis=1))
 
 def opt_thresholds(y_true, y_scores):
     othresholds = np.zeros(y_scores.shape[1])
@@ -162,12 +169,12 @@ class AMTNetwork:
         # changed_AS
         # fc1 = Dense(1000, activation='sigmoid')(flattened)
 
-        fc1 = Dense(400, activation='sigmoid')(flattened)
+        fc1 = Dense(1000, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
         # changed_AS
         # fc2 = Dense(200, activation='sigmoid')(do3)
-        fc2 = Dense(100, activation='sigmoid')(do3)
+        fc2 = Dense(200, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
