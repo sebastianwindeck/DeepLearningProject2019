@@ -25,11 +25,14 @@ if __name__ == '__main__':
         'init_lr': 1e-1, 'lr_decay': 'linear',
 
         # parameters for audio
+        # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+
         'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False',
 
 
         ### FIXED
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
         ###
