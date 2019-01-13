@@ -13,6 +13,7 @@ from keras.optimizers import SGD
 from keras.utils import plot_model
 
 import sklearn
+import keras
 from sklearn.utils.class_weight import compute_class_weight
 
 from acoustics.generator import white, pink,blue, brown, violet
@@ -97,6 +98,24 @@ class Threshold(Callback):
         print("validation p,r,f,s:")
         print(p, r, f, s)
 
+class LossHistory(Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        self.losses.append(logs.get('loss'))
+
+class PredictionHistory(keras.callbacks.Callback):
+    def __init__(self, train_data, train_labels):
+        self.train_data = train_data
+        self.train_labels =train_labels
+        self.predhis = []
+
+    def on_epoch_end(self, epoch, logs={}):
+        x_train = self.train_data
+        y_train = self.train_labels
+        prediction = self.model.predict(x_train)
+        print("Numbers of predicted notes: ", np.sum(np.round(prediction)>0))
+        print("Number of true notes: ",np.sum(np.round(y_train)>0))
+        #self.predhis.append(prediction)
+
 
 def f1(y_true, y_pred):
     def recall(y_true, y_pred):
@@ -130,17 +149,13 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 def calculating_class_weights(y_true):
-    print(np.unique(y_true))
     number_dim = np.shape(y_true)[1]  # columns
     weights = np.empty([number_dim, 2])  # empty array
     for i in range(number_dim):
-        print(i)
-        #print(np.unique(y_true[:, i]))
         try:
             weights[i] = compute_class_weight('balanced', classes=[0, 1], y=y_true[:, i])
         except:
             weights[i] = np.array([1, 1])
-        print(i, ": ", weights[i])
     return weights
 
 
@@ -186,11 +201,11 @@ class AMTNetwork:
         # normal convnet layer (have to do one initially to get 64 channels)
         conv1 = Conv2D(50, (5, 25), activation='relu', padding='same', data_format="channels_last")(reshape)
         do1 = Dropout(0.5)(conv1)
-        pool1 = MaxPooling2D(pool_size=(1, 3))(do1)
+        pool1 = MaxPooling2D(pool_size=(2, 3))(do1)
 
         conv2 = Conv2D(50, (3, 5), activation='relu', padding='same', data_format="channels_last")(pool1)
         do2 = Dropout(0.5)(conv2)
-        pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
+        pool2 = MaxPooling2D(pool_size=(2, 3))(do2)
 
         flattened = Flatten()(pool2)
         # changed_AS
@@ -235,6 +250,7 @@ class AMTNetwork:
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root, train_descr + 'training.log'))
+        predHist = PredictionHistory(features, labels)
 
         if self.lr_decay == 'linear':
             decay = LinearDecay(self.init_lr, epochs)
@@ -251,7 +267,8 @@ class AMTNetwork:
         early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
-                     early_stop, decay, csv_logger]
+                     early_stop, decay, csv_logger,
+                     predHist]
 
         # class_weights = NULL
         # self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
