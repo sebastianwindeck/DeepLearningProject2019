@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
         ### FIXED
         # bin_multiple fix to 36
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 36, 'residual': 'False',
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': False,
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
 
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
