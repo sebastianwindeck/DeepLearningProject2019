@@ -103,8 +103,6 @@ if __name__ == '__main__':
     inputs, outputs, datapath = prepareData(args)
     print("Inputs have shape: ", inputs.shape)
     print("Outputs have shape: ", outputs.shape)
-    print("Total number of notes detected in input set ", np.sum(inputs))
-    print("Number of different values in input set: ", np.unique(inputs))
     #sums = np.sum(inputs, axis=1)
     #sns.heatmap(sums)
     #plt.show()
