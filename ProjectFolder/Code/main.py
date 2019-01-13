@@ -21,8 +21,8 @@ if __name__ == '__main__':
 
     # Define a parameter structure args
     args = {  # model parameters:
-        'model_name': 'baseline',  # für init lr geht auch 0.1
-        'init_lr': 1e-1,
+        'model_name': 'baseline',
+        'init_lr': 1e-1,  # für init lr geht auch 0.1
         'lr_decay': 'linear',
 
         # parameters for audio
@@ -30,17 +30,15 @@ if __name__ == '__main__':
         'spec_type': 'cqt',
         'bin_multiple': 12,  # bin_multiple fix to 36
         'residual': 'False',
+        'hop_length': 512,
 
         ### FIXED
-        # bin_multiple fix to 36
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 36, 'residual': 'False',
+        'sr': 16000,
+        'spec_type': 'cqt',
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
-
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
         ###
-
-        'hop_length': 512,
 
         # training parameters: ==> currently just some random numbers...
         'train_basemodel': True,
