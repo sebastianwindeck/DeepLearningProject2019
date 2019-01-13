@@ -27,10 +27,11 @@ if __name__ == '__main__':
         # parameters for audio
         # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
 
-        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 3, 'residual': 'False',
 
 
         ### FIXED
+        # bin_multiple fix to 36
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 36, 'residual': 'False',
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
 
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
@@ -60,8 +61,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': 2000,  # set to -1 to ignore
-        'maxFrames': 10000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': -1  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -118,9 +119,7 @@ if __name__ == '__main__':
         # initial training, with clean data:
         at.compilation()
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-        at.save(baseModelPath)
-
-
+        exit()
     else:
         at.load(baseModelPath)
         at.compilation()
