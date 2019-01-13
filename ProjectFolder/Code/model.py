@@ -10,8 +10,10 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
 from keras.optimizers import SGD
-from keras.utils import plot_model, multi_gpu_model
+from keras.utils import plot_model
 import sklearn
+from acoustics.generator import white, pink,blue, brown, violet
+import matplotlib.pyplot as plt
 
 
 def opt_thresholds(y_true, y_scores):
@@ -201,9 +203,6 @@ class AMTNetwork:
         else:
             decay = HalfDecay(self.init_lr, 5)
 
-        # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
-        #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
-        #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5', monitor='val_loss', verbose=1,
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
@@ -302,17 +301,8 @@ class Generator:
 
             self.i += 1
 
-import acoustics
 
-from acoustics.generator import white, pink,blue, brown, violet
-
-import matplotlib.pyplot as plt
-
-
-class Noiser():
-    # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
-    #               Start with Gaussian (=white), pink, blue, brown, violet .
-
+class Noiser:
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
