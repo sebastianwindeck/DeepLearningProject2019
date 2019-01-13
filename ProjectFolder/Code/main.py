@@ -125,7 +125,7 @@ if __name__ == '__main__':
         at.load(baseModelPath)
         at.compilation()
     # initialize noiser:
-    noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
+    noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 
     noise_levels = np.zeros(shape=1)
     noise_level = args['noise_initial_level']
