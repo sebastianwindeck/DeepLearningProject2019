@@ -168,13 +168,13 @@ if __name__ == '__main__':
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
-                print('Current noise level' + int(noise_level) + ' in epoch ' + noiseEpoch)
+                print('Current noise level' + str(int(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
             if classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
-                print('Current noise level' + int(noise_level) + ' in epoch ' + noiseEpoch)
+                print('Current noise level' + str(int(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
             print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
