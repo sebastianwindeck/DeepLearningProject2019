@@ -129,7 +129,6 @@ if __name__ == '__main__':
         # initial training, with clean data:
         at.compilation(outputs)
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-        exit()
     else:
         at.load(baseModelPath)
         at.compilation(outputs)
@@ -169,13 +168,13 @@ if __name__ == '__main__':
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
-                print(noise_level)
+                print('Current noise level' + int(noise_level) + ' in epoch ' + noiseEpoch)
                 continue  # Jump to the next cycle
 
             if classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
-                print(noise_level)
+                print('Current noise level' + int(noise_level) + ' in epoch ' + noiseEpoch)
                 continue  # Jump to the next cycle
 
             print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)

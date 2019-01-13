@@ -291,6 +291,9 @@ class AMTNetwork:
                 """
 
         res_new = self.model.evaluate(x_new, y_true)[0]
+        print('Number of true notes: ', np.count_nonzero(y_true))
+        print('Number of predicted clean notes: ', np.count_nonzero(self.model.predict(x_old)))
+        print('Number of predicted noisy notes: ', np.count_nonzero(self.model.predict(x_new)))
         res_old = self.model.evaluate(x_old, y_true)[0]
         dif = res_new - res_old
         dif_percent = dif / res_old
@@ -299,7 +302,7 @@ class AMTNetwork:
         # print("loss has increased by", dif, "absolute")
         # print("loss has increased by", dif_percent, "percent")
 
-        return dif_percent
+        return dif
 
     def save(self, model_path):
         """
