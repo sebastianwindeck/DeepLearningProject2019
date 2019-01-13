@@ -32,7 +32,10 @@ if __name__ == '__main__':
         'residual': 'False',
 
         ### FIXED
+        # bin_multiple fix to 36
+        'sr': 16000, 'spec_type': 'cqt', 'bin_multiple': 36, 'residual': 'False',
         'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
         ###
@@ -63,8 +66,6 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': 2000,  # set to -1 to ignore
-        'maxFrames': 150000  # set to -1 to ignore
         'maxFramesPerFile': -1,  # set to -1 to ignore
         'maxFrames': -1  # set to -1 to ignore
         ###
