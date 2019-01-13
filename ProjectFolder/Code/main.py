@@ -28,7 +28,7 @@ if __name__ == '__main__':
         # parameters for audio
         'sr': 16000,
         'spec_type': 'cqt',
-        'bin_multiple': 12,
+        'bin_multiple': 12,  # bin_multiple fix to 36
         'residual': 'False',
 
         ### FIXED
@@ -65,6 +65,8 @@ if __name__ == '__main__':
         ### FIXED
         'maxFramesPerFile': 2000,  # set to -1 to ignore
         'maxFrames': 150000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': -1  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -121,14 +123,12 @@ if __name__ == '__main__':
         # initial training, with clean data:
         at.compilation()
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-        at.save(baseModelPath)
-
-
+        exit()
     else:
         at.load(baseModelPath)
         at.compilation()
     # initialize noiser:
-    noise_generator = Noiser(noise_type="simplistic", noise_size=args['input_shape'])
+    noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 
     noise_levels = np.zeros(shape=1)
     noise_level = args['noise_initial_level']
@@ -152,7 +152,6 @@ if __name__ == '__main__':
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[idx] + noise_level * this_noise
-            # AS: ich verstehe die Logik dieser noise_levels nicht. Wird oben mit 0 initialisiert??
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)

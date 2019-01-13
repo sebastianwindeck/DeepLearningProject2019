@@ -10,9 +10,18 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
 from keras.optimizers import SGD
-from keras.utils import plot_model, multi_gpu_model
-import sklearn
+from keras.utils import plot_model
 
+import sklearn
+from acoustics.generator import white, pink,blue, brown, violet
+import matplotlib.pyplot as plt
+
+
+def hn_multilabel_loss(y_true, y_pred):
+    # Avoid divide by 0
+    y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
+    # Multi-task loss
+    return K.mean(K.sum(- y_true * K.log(y_pred) - (1 - y_true) * K.log(1 - y_pred), axis=1))
 
 def opt_thresholds(y_true, y_scores):
     othresholds = np.zeros(y_scores.shape[1])
@@ -309,17 +318,8 @@ class Generator:
 
             self.i += 1
 
-import acoustics
 
-from acoustics.generator import white, pink, blue, brown, violet
-
-import matplotlib.pyplot as plt
-
-
-class Noiser():
-    # TODO: [Tanos] Create noise machine for several noise types to generate noise samples frame by frame.
-    #               Start with Gaussian (=white), pink, blue, brown, violet .
-
+class Noiser:
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
