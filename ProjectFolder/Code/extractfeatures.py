@@ -252,6 +252,8 @@ def prepareData(args):
 
 # End audio stuff
 
+
+# SW: Only for basic transformation and data set reduction
 def take_every_second(args):
     """reduce size of data by taking only every other sample.
 

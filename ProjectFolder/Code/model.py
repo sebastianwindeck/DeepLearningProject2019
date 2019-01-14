@@ -3,8 +3,6 @@ from operator import concat
 
 import numpy as np
 import tensorflow as tf
-from keras import backend as K
-from keras.callbacks import Callback
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
@@ -12,174 +10,12 @@ from keras.models import Model, model_from_json
 from keras.optimizers import SGD, Adam, Adamax, Nadam
 from keras.utils import plot_model
 from keras.losses import binary_crossentropy
-
-import sklearn
 import keras
-from sklearn.utils.class_weight import compute_class_weight
 
 from acoustics.generator import white, pink,blue, brown, violet
-
+from model_functions import calculating_class_weights, get_weighted_loss, f1
+from model_functions import LinearDecay, HalfDecay, PredictionHistory, LossHistory
 import matplotlib.pyplot as plt
-
-
-def opt_thresholds(y_true, y_scores):
-    othresholds = np.zeros(y_scores.shape[1])
-    print(othresholds.shape)
-    for label, (label_scores, true_bin) in enumerate(zip(y_scores.T, y_true.T)):
-        # print label
-        precision, recall, thresholds = sklearn.metrics.precision_recall_curve(true_bin, label_scores)
-        max_f1 = 0
-        max_f1_threshold = .5
-        for r, p, t in zip(recall, precision, thresholds):
-            if p + r == 0: continue
-            if (2 * p * r) / (p + r) > max_f1:
-                max_f1 = (2 * p * r) / (p + r)
-                max_f1_threshold = t
-        # print label, ": ", max_f1_threshold, "=>", max_f1
-        othresholds[label] = max_f1_threshold
-        print(othresholds)
-    return othresholds
-
-
-class LinearDecay(Callback):
-    # Define a linear pattern for the decay of the learning rate.
-
-    def __init__(self, initial_lr, epochs):
-        super(LinearDecay, self).__init__()
-        self.initial_lr = initial_lr
-        self.decay = initial_lr / epochs
-
-    def on_epoch_begin(self, epoch, logs={}):
-        new_lr = self.initial_lr - self.decay * epoch
-        print("ld: learning rate is now " + str(new_lr))
-        K.set_value(self.model.optimizer.lr, new_lr)
-
-
-class HalfDecay(Callback):
-    # currently not used. Was copied from keras_train.py (but not used there neither)
-    # -> can probably be deleted.
-
-    def __init__(self, initial_lr, period):
-        super(HalfDecay, self).__init__()
-        self.init_lr = initial_lr
-        self.period = period
-
-    def on_epoch_begin(self, epoch, logs={}):
-        factor = epoch // self.period
-        lr = self.init_lr / (2 ** factor)
-        print("hd: learning rate is now " + str(lr))
-        K.set_value(self.model.optimizer.lr, lr)
-
-
-class Threshold(Callback):
-    '''
-        decay = decay value to subtract each epoch
-    '''
-
-    def __init__(self, val_data):
-        super(Threshold, self).__init__()
-        self.val_data = val_data
-        _, y = val_data
-        print(y)
-        self.othresholds = np.full(y.shape[1], 0.5)
-
-    def on_epoch_end(self, epoch, logs={}):
-        # find optimal thresholds on validation data
-        x, y_true = self.val_data
-        y_scores = self.model.predict(x)
-        self.othresholds = opt_thresholds(y_true, y_scores)
-        y_pred = y_scores > self.othresholds
-        p, r, f, s = sklearn.metrics.precision_recall_fscore_support(y_true, y_pred, average='micro')
-        print("validation p,r,f,s:")
-        print(p, r, f, s)
-
-class LossHistory(Callback):
-    def on_epoch_end(self, epoch, logs={}):
-        self.losses.append(logs.get('loss'))
-
-class PredictionHistory(keras.callbacks.Callback):
-    def __init__(self, train_data, train_labels):
-        self.train_data = train_data
-        self.train_labels =train_labels
-        self.predhis = []
-
-    def on_epoch_end(self, epoch, logs={}):
-        x_train = self.train_data
-        y_train = self.train_labels
-        prediction = self.model.predict(x_train)
-        print("Numbers of predicted notes: ", np.sum(np.round(prediction)>0))
-        print("Number of true notes: ",np.sum(np.round(y_train)>0))
-        print("Ratio of total notes played: ",
-              np.round(np.sum(np.round(prediction)>0)/(self.train_labels.shape[0]*self.train_labels.shape[1]),
-                       decimals=2))
-        #self.predhis.append(prediction)
-
-
-def f1(y_true, y_pred):
-    def recall(y_true, y_pred):
-        """Recall metric.
-
-        Only computes a batch-wise average of recall.
-
-        Computes the recall, a metric for multi-label classification of
-        how many relevant items are selected.
-        """
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
-        recall = true_positives / (possible_positives + K.epsilon())
-        return recall
-
-    def precision(y_true, y_pred):
-        """Precision metric.
-
-        Only computes a batch-wise average of precision.
-
-        Computes the precision, a metric for multi-label classification of
-        how many selected items are relevant.
-        """
-        true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
-        predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
-        precision = true_positives / (predicted_positives + K.epsilon())
-        return precision
-
-    precision = precision(y_true, y_pred)
-    recall = recall(y_true, y_pred)
-    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
-
-def calculating_class_weights(y_true):
-    number_dim = np.shape(y_true)[1]
-    sample_dim = np.shape(y_true)[0]# columns
-    weights = np.empty([number_dim, 1])  # empty array
-    for i in range(number_dim):
-        weights[i] = np.count_nonzero(y_true[:,i], axis=0)/np.count_nonzero(y_true[:,i]==0, axis=0)
-        #except:
-        #    weights[i] = np.array([0.5,0.5])
-    return weights.T
-
-
-def get_weighted_loss(weights):
-    def weighted_loss(y_true, y_pred):
-        return K.mean(weighted_binary_crossentropy(y_true, y_pred, weights), axis=-1)
-        # old not accurate
-        #return K.mean(
-        #    (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),
-        #    axis=-1)
-
-    return weighted_loss
-
-def weighted_binary_crossentropy(target, output, weights, from_logits=False):
-    from keras.backend.common import epsilon
-
-    # Note: tf.nn.sigmoid_cross_entropy_with_logits
-    #  expects logits, Keras expects probabilities.
-    if not from_logits:
-        # transform back to logits
-        _epsilon = tf.convert_to_tensor(epsilon(), output.dtype.base_dtype)
-        output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
-        output = tf.log(output / (1 - output))
-
-    return tf.nn.weighted_cross_entropy_with_logits(targets=target, logits=output, pos_weight=weights)
-
 
 
 class AMTNetwork:
@@ -275,11 +111,11 @@ class AMTNetwork:
         # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
         #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
         #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
-        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5', monitor='val_loss', verbose=1,
+        checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5', monitor='val_loss', verbose=0,
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=30, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=30, monitor='val_loss', verbose=0, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger,
@@ -289,7 +125,7 @@ class AMTNetwork:
         # self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
         # validation_split=0.1, class_weight=class_weights)
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
-                       validation_split=0.1)
+                       validation_split=0.1, verbose=2)
 
         # self.model.fit_generator(generator=next(trainGen),
         #                         steps_per_epoch=trainGen.steps, epochs=epochs,
@@ -360,7 +196,7 @@ class AMTNetwork:
         with tf.device('/cpu:0'):
             self.model = loaded_model
 
-
+# Generator for sample batches
 class Generator:
 
     def __init__(self, features, labels, batch_size, args):
@@ -387,7 +223,7 @@ class Generator:
 
             self.i += 1
 
-
+# Noise generator
 class Noiser:
 
     def __init__(self, noise_size, noise_type="simplistic"):
