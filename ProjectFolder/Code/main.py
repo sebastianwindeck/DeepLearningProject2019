@@ -135,6 +135,7 @@ if __name__ == '__main__':
 
         at.compilation(outputs)
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
+        at.save(baseModelPath=baseModelPath)
     else:
         at.load(baseModelPath)
         at.compilation(outputs)
