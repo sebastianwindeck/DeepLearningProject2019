@@ -9,8 +9,9 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam, Adamax, Nadam
 from keras.utils import plot_model
+from keras.losses import binary_crossentropy
 
 import sklearn
 import keras
@@ -20,12 +21,6 @@ from acoustics.generator import white, pink,blue, brown, violet
 
 import matplotlib.pyplot as plt
 
-
-def hn_multilabel_loss(y_true, y_pred):
-    # Avoid divide by 0
-    y_pred = K.clip(y_pred, K.epsilon(), 1 - K.epsilon())
-    # Multi-task loss
-    return K.mean(K.sum(- y_true * K.log(y_pred) - (1 - y_true) * K.log(1 - y_pred), axis=1))
 
 def opt_thresholds(y_true, y_scores):
     othresholds = np.zeros(y_scores.shape[1])
@@ -114,6 +109,9 @@ class PredictionHistory(keras.callbacks.Callback):
         prediction = self.model.predict(x_train)
         print("Numbers of predicted notes: ", np.sum(np.round(prediction)>0))
         print("Number of true notes: ",np.sum(np.round(y_train)>0))
+        print("Ratio of total notes played: ",
+              np.round(np.sum(np.round(prediction)>0)/(self.train_labels.shape[0]*self.train_labels.shape[1]),
+                       decimals=2))
         #self.predhis.append(prediction)
 
 
@@ -149,23 +147,38 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 def calculating_class_weights(y_true):
-    number_dim = np.shape(y_true)[1]  # columns
-    weights = np.empty([number_dim, 2])  # empty array
+    number_dim = np.shape(y_true)[1]
+    sample_dim = np.shape(y_true)[0]# columns
+    weights = np.empty([number_dim, 1])  # empty array
     for i in range(number_dim):
-        try:
-            weights[i] = compute_class_weight('balanced', classes=[0, 1], y=y_true[:, i])
-        except:
-            weights[i] = np.array([1, 1])
-    return weights
+        weights[i] = np.count_nonzero(y_true[:,i], axis=0)/np.count_nonzero(y_true[:,i]==0, axis=0)
+        #except:
+        #    weights[i] = np.array([0.5,0.5])
+    return weights.T
 
 
 def get_weighted_loss(weights):
     def weighted_loss(y_true, y_pred):
-        return K.mean(
-            (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),
-            axis=-1)
+        return K.mean(weighted_binary_crossentropy(y_true, y_pred, weights), axis=-1)
+        # old not accurate
+        #return K.mean(
+        #    (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),
+        #    axis=-1)
 
     return weighted_loss
+
+def weighted_binary_crossentropy(target, output, weights, from_logits=False):
+    from keras.backend.common import epsilon
+
+    # Note: tf.nn.sigmoid_cross_entropy_with_logits
+    #  expects logits, Keras expects probabilities.
+    if not from_logits:
+        # transform back to logits
+        _epsilon = tf.convert_to_tensor(epsilon(), output.dtype.base_dtype)
+        output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
+        output = tf.log(output / (1 - output))
+
+    return tf.nn.weighted_cross_entropy_with_logits(targets=target, logits=output, pos_weight=weights)
 
 
 
@@ -227,7 +240,9 @@ class AMTNetwork:
 
     def compilation(self, y_true):
         weights = calculating_class_weights(y_true=y_true)
-        self.model.compile(loss=get_weighted_loss(weights), optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
+        #self.model.compile(loss='binary_crossentropy', optimizer= Nadam(lr=self.init_lr), metrics=[f1])
+        self.model.compile(loss=get_weighted_loss(calculating_class_weights(y_true)), optimizer=SGD(lr=self.init_lr, momentum=0.9),
+                           metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:
@@ -264,7 +279,7 @@ class AMTNetwork:
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=5, monitor='val_loss', verbose=1, mode='min')
+        early_stop = EarlyStopping(patience=30, monitor='val_loss', verbose=1, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger,
@@ -373,7 +388,7 @@ class Generator:
             self.i += 1
 
 
-class Noiser():
+class Noiser:
 
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type

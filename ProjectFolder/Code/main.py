@@ -26,8 +26,6 @@ if __name__ == '__main__':
         'lr_decay': 'linear',
 
         # parameters for audio
-        'sr': 16000,
-        'spec_type': 'cqt',
         'bin_multiple': 3,
         'residual': 'False',
         'hop_length': 512,
@@ -120,6 +118,11 @@ if __name__ == '__main__':
     #sns.pointplot(y=inputs[5,5,:], x=np.arange(inputs.shape[]))
     #plt.show()
 
+    print(np.where(np.sum(inputs, axis=1) == 1))
+    inputs = inputs[np.sum(outputs, axis=1) == 1,]
+    print("Current input shape: ",inputs.shape)
+    outputs = outputs[(np.sum(outputs, axis=1) == 1),]
+    print("Current output shape: ", outputs.shape)
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
 
@@ -127,6 +130,7 @@ if __name__ == '__main__':
     evaluatePath = os.path.join(args['checkpoint_root'], 'diagram')
     if args['train_basemodel']:
         # initial training, with clean data:
+
         at.compilation(outputs)
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
     else:
@@ -163,6 +167,7 @@ if __name__ == '__main__':
 
             if noise_level > 10e8 or noise_level < 10e-8:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
+                print("BREAK because of size threshold")
                 break
 
             if classi_change > args['max_difficulty_on_noisy']:
