@@ -1,7 +1,6 @@
 import datetime
 import inspect
 import os
-
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -118,11 +117,14 @@ if __name__ == '__main__':
     #sns.pointplot(y=inputs[5,5,:], x=np.arange(inputs.shape[]))
     #plt.show()
 
-    print(np.where(np.sum(inputs, axis=1) == 1))
-    inputs = inputs[np.sum(outputs, axis=1) == 1,]
+
+    '''#For one single pitch only 
+    num_pitches = 1
+    inputs = inputs[(np.sum(outputs, axis=1) == num_pitches)x,]
     print("Current input shape: ",inputs.shape)
-    outputs = outputs[(np.sum(outputs, axis=1) == 1),]
+    outputs = outputs[(np.sum(outputs, axis=1) == num_pitches),]
     print("Current output shape: ", outputs.shape)
+    '''
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
 
