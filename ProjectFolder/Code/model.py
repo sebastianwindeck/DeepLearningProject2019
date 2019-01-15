@@ -154,6 +154,10 @@ class AMTNetwork:
         y_pred = self.model.predict(x)
         return y_pred
 
+    def getscores(self, X, Y):
+        score = self.model.evaluate(X,Y)
+        return score
+
     def evaluation(self, x_new, x_old, y_true):
 
         """ Evaluate score of predicting new noise level and compare it to score of old noise level.
