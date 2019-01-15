@@ -43,8 +43,8 @@ if __name__ == '__main__':
         ###
 
         # training parameters: ==> currently just some random numbers...
-        'train_basemodel': True,
-        'epochs_on_clean': 1000,
+        'train_basemodel': False,
+        'epochs_on_clean': 1,
         'epochs_on_noisy': 10,
         'noise_epochs': 20,
         'min_difficulty_on_noisy': 0.05,  # just a random value...
@@ -123,13 +123,24 @@ if __name__ == '__main__':
 
         at.compilation(outputs, save_path=os.path.join(args['checkpoint_root'], 'balance_weight.png'))
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
-        at.save(baseModelPath=baseModelPath)
+        at.save(model_path=baseModelPath)
     else:
+        #Load Basemodel:
+        bm = AMTNetwork(args)
+        bm.load(baseModelPath)
+
+        #Noise Model to Train:
         at.load(baseModelPath)
         at.compilation(outputs, save_path=os.path.join(args['checkpoint_root'], 'balance_weight.png'))
     # initialize noiser:
     noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 
+    #Track f1 scores of the basemodel that is not further trained to noise
+    basemodel_score = np.empty(shape=4)
+    basemodel_score = bm.predict(inputs, outputs) #Not sure if f1 is 1 or 0
+    print(basemodel_score)
+
+    #Save Noise levels
     noise_levels = np.zeros(shape=1)
     noise_level = args['noise_initial_level']
 
@@ -179,6 +190,7 @@ if __name__ == '__main__':
             break
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
+        bm_score = np.append.bm.evaluate(noisy_inputs, outputs)
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         this_noise = noise_generator.generate(inputs.shape[0])
@@ -199,7 +211,7 @@ if __name__ == '__main__':
 
     # Save np array of noise levels
     np.save(os.path.join('checkpoint_root',"noise_levels"), noise_levels)
-
+    np.save(os.path.jpin('checkpoint_root',"bm_score"), bm_score)
 
     # end for noiseEpoch in range(args['noise_epochs'])
 
