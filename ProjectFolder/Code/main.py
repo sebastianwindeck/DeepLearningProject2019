@@ -67,8 +67,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': 2000,  # set to -1 to ignore
-        'maxFrames': 30000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': -1  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
