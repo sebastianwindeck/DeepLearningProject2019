@@ -140,19 +140,35 @@ def f1(y_true, y_pred):
 
 
 def calculating_class_weights(y_true):
+
+    '''
+    # for one weight for everything
+    number_dim = np.shape(y_true)[1]
+    sample_dim = np.shape(y_true)[0]  # columns
+    weights = np.empty([number_dim, 1])
+    weights.fill(np.count_nonzero(y_true[:, i] == 0)/(np.count_nonzero(y_true[:, i])))
+
+    return weights.T
+    '''
+
+    # for one weight per pitch
     number_dim = np.shape(y_true)[1]
     sample_dim = np.shape(y_true)[0]  # columns
     weights = np.empty([number_dim, 1])  # empty array
     for i in range(number_dim):
-        weights[i] = np.count_nonzero(y_true[:, i], axis=0) / np.count_nonzero(y_true[:, i] == 0,
-                                                                               axis=0)
+        weights[i] = np.count_nonzero(y_true[:, i] == 0,axis=0)/(np.count_nonzero(y_true[:, i], axis=0))
+
     return weights.T
 
 
 def get_weighted_loss(weights):
     def weighted_loss(y_true, y_pred):
         return K.mean(weighted_binary_crossentropy(y_true, y_pred, weights),
-                      axis=-1)  # old not accurate  # return K.mean(  #    (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),  #    axis=-1)
+                      axis=-1)
+        # old not accurate
+        # return K.mean(
+        #    (weights[:, 0] ** (1 - y_true)) * (weights[:, 1] ** (y_true)) * K.binary_crossentropy(y_true, y_pred),
+        #    axis=-1)
 
     return weighted_loss
 
