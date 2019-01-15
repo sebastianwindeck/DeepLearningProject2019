@@ -139,26 +139,28 @@ def f1(y_true, y_pred):
     return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
 
 
-def calculating_class_weights(y_true):
+def calculating_class_weights(y_true, type = 'over_columns'):
+    if type == 'over_all':
 
-    '''
     # for one weight for everything
-    number_dim = np.shape(y_true)[1]
-    sample_dim = np.shape(y_true)[0]  # columns
-    weights = np.empty([number_dim, 1])
-    weights.fill(np.count_nonzero(y_true[:, i] == 0)/(np.count_nonzero(y_true[:, i])))
+        number_dim = np.shape(y_true)[1]
+        weights = np.empty([number_dim, 1])
+        weights.fill(np.count_nonzero(y_true == 0)/(np.count_nonzero(y_true)))
 
-    return weights.T
-    '''
+        return weights.T
 
+    if type == 'over_columns':
     # for one weight per pitch
-    number_dim = np.shape(y_true)[1]
-    sample_dim = np.shape(y_true)[0]  # columns
-    weights = np.empty([number_dim, 1])  # empty array
-    for i in range(number_dim):
-        weights[i] = np.count_nonzero(y_true[:, i] == 0,axis=0)/(np.count_nonzero(y_true[:, i], axis=0))
+        number_dim = np.shape(y_true)[1]
+        weights = np.empty([number_dim, 1])  # empty array
+        for i in range(number_dim):
+            weights[i] = np.count_nonzero(y_true[:, i] == 0,axis=0)/(np.count_nonzero(y_true[:, i], axis=0))
 
-    return weights.T
+        return weights.T
+
+    else:
+        print('WARNING: type is set wrong --> set to over_columns')
+        calculating_class_weights(y_true=y_true, type = 'over_columns')
 
 
 def get_weighted_loss(weights):
