@@ -75,9 +75,12 @@ class AMTNetwork:
 
 
     def compilation(self, y_true):
-        weights = calculating_class_weights(y_true=y_true)
+        weights = calculating_class_weights(y_true=y_true, type='over_columns')
+        weight = calculating_class_weights(y_true=y_true, type='over_all')
+
+
         #self.model.compile(loss='binary_crossentropy', optimizer= Nadam(lr=self.init_lr), metrics=[f1])
-        self.model.compile(loss=get_weighted_loss(calculating_class_weights(y_true)), optimizer=SGD(lr=self.init_lr, momentum=0.9),
+        self.model.compile(loss=get_weighted_loss(weights), optimizer=SGD(lr=self.init_lr, momentum=0.9),
                            metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
@@ -193,8 +196,7 @@ class AMTNetwork:
         # load weights into new model
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
-        with tf.device('/cpu:0'):
-            self.model = loaded_model
+        self.model = loaded_model
 
 # Generator for sample batches
 class Generator:

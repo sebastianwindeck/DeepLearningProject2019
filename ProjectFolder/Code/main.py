@@ -208,10 +208,11 @@ if __name__ == '__main__':
             y_true = outputs
             print(y_true.shape)
             final_score(y_pred=y_pred, y_true=y_true, description=str(noiseEpoch))
+            # not tested on the cluster
             #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 
     # Save np array of noise levels
-    np.save("noise_levels", noise_levels)
+    np.save(os.path.join('checkpoint_root',"noise_levels"), noise_levels)
 
 
     # end for noiseEpoch in range(args['noise_epochs'])
