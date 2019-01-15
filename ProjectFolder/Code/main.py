@@ -111,7 +111,7 @@ if __name__ == '__main__':
     print("Number of 0s in output: ", sum(sum(outputs==0)))
     print("Size of outputs: ", outputs.size)
     print("=> 1s should be weighted ", sum(sum(outputs==0))/sum(sum(outputs==1)))
-    visualize_input(inputs, save_path=os.path.join(args[args['checkpoint_root']],'input_heatmap.png'))
+    visualize_input(inputs, save_path=os.path.join(args['checkpoint_root'],'input_heatmap.png'))
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
