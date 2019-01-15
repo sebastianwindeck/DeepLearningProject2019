@@ -15,7 +15,10 @@ import keras
 from acoustics.generator import white, pink,blue, brown, violet
 from model_functions import calculating_class_weights, get_weighted_loss, f1
 from model_functions import LinearDecay, HalfDecay, PredictionHistory, LossHistory
-import matplotlib.pyplot as plt
+from visualize import visualize_weights
+
+
+
 
 
 class AMTNetwork:
@@ -74,14 +77,14 @@ class AMTNetwork:
         # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
 
 
-    def compilation(self, y_true):
-        weights = calculating_class_weights(y_true=y_true, type='over_columns')
-        weight = calculating_class_weights(y_true=y_true, type='over_all')
+    def compilation(self, y_true, save_path):
 
+        # plot balancing weight and save to file
+        visualize_weights(y_true,save_path)
 
         #self.model.compile(loss='binary_crossentropy', optimizer= Nadam(lr=self.init_lr), metrics=[f1])
-        self.model.compile(loss=get_weighted_loss(weights), optimizer=SGD(lr=self.init_lr, momentum=0.9),
-                           metrics=[f1])
+        self.model.compile(loss=get_weighted_loss(calculating_class_weights(y_true, type='over_columns')),
+                           optimizer=SGD(lr=self.init_lr, momentum=0.9),metrics=[f1])
         ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
         self.model.summary()
         try:

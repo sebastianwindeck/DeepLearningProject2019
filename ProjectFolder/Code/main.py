@@ -8,11 +8,16 @@ import matplotlib.pyplot as plt
 from evaluate import pitch_confusion, final_score
 from extractfeatures import prepareData
 from model import Noiser, AMTNetwork
+from visualize import visualize_input
 
 # import foolbox
 # from foolbox import Adversarial
 # from foolbox.distances import MeanSquaredDistance
 # import pretty_midi
+from model_functions import calculating_class_weights
+import matplotlib.pyplot as plt
+from scipy.interpolate import spline
+from scipy.ndimage import gaussian_filter1d
 
 if __name__ == '__main__':
 
@@ -62,8 +67,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': -1,  # set to -1 to ignore
-        'maxFrames': -1  # set to -1 to ignore
+        'maxFramesPerFile': 2000,  # set to -1 to ignore
+        'maxFrames': 30000  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -102,29 +107,12 @@ if __name__ == '__main__':
     print("Inputs have shape: ", inputs.shape)
     print("Outputs have shape: ", outputs.shape)
     print("Total number of notes detected in input set ", np.sum(inputs))
-    #print("Number of different values in input set: ", np.unique(inputs))
     print("Number of 1s in output: ", sum(sum(outputs==1)))
     print("Number of 0s in output: ", sum(sum(outputs==0)))
     print("Size of outputs: ", outputs.size)
     print("=> 1s should be weighted ", sum(sum(outputs==0))/sum(sum(outputs==1)))
-    # NOT WORKING: np.histogram(outputs.sum(axis=1), bins=(-0.5:20.5:1))
-    #print("Number of ")
-    #sums = np.sum(inputs, axis=1)
-    #sns.heatmap(sums)
-    #plt.show()
+    visualize_input(inputs, save_path=os.path.join(args[args['checkpoint_root']],'input_heatmap.png'))
 
-
-    #sns.pointplot(y=inputs[5,5,:], x=np.arange(inputs.shape[]))
-    #plt.show()
-
-
-    '''#For one single pitch only 
-    num_pitches = 1
-    inputs = inputs[(np.sum(outputs, axis=1) == num_pitches)x,]
-    print("Current input shape: ",inputs.shape)
-    outputs = outputs[(np.sum(outputs, axis=1) == num_pitches),]
-    print("Current output shape: ", outputs.shape)
-    '''
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
 
@@ -133,12 +121,12 @@ if __name__ == '__main__':
     if args['train_basemodel']:
         # initial training, with clean data:
 
-        at.compilation(outputs)
+        at.compilation(outputs, save_path=os.path.join(args['checkpoint_root'], 'balance_weight.png'))
         at.train(inputs, outputs, args=args, epochs=args['epochs_on_clean'], train_descr='initial')
         at.save(baseModelPath=baseModelPath)
     else:
         at.load(baseModelPath)
-        at.compilation(outputs)
+        at.compilation(outputs, save_path=os.path.join(args['checkpoint_root'], 'balance_weight.png'))
     # initialize noiser:
     noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 
