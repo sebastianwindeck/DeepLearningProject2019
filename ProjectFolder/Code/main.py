@@ -67,8 +67,8 @@ if __name__ == '__main__':
         'basemodel_root': os.path.join(proj_root, 'Basemodel'),
 
         ### FIXED
-        'maxFramesPerFile': 2000,  # set to -1 to ignore
-        'maxFrames': 30000  # set to -1 to ignore
+        'maxFramesPerFile': -1,  # set to -1 to ignore
+        'maxFrames': -1  # set to -1 to ignore
         ###
 
     }  # Feel free to add more parameters if needed.
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     print("Number of 0s in output: ", sum(sum(outputs==0)))
     print("Size of outputs: ", outputs.size)
     print("=> 1s should be weighted ", sum(sum(outputs==0))/sum(sum(outputs==1)))
-    visualize_input(inputs, save_path=os.path.join(args[args['checkpoint_root']],'input_heatmap.png'))
+    visualize_input(inputs, save_path=os.path.join(args['checkpoint_root'],'input_heatmap.png'))
 
     # initialize the amt model, and do an initial training
     at = AMTNetwork(args)
