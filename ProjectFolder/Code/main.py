@@ -44,8 +44,8 @@ if __name__ == '__main__':
 
         # training parameters: ==> currently just some random numbers...
         'train_basemodel': False,
-        'epochs_on_clean': 1,
-        'epochs_on_noisy': 10,
+        'epochs_on_clean': 1000,
+        'epochs_on_noisy': 50,
         'noise_epochs': 20,
         'min_difficulty_on_noisy': 0.05,  # just a random value...
         'max_difficulty_on_noisy': 0.10,  # just a random value...

@@ -12,7 +12,7 @@ from keras.utils import plot_model
 from keras.losses import binary_crossentropy
 import keras
 
-from acoustics.generator import white, pink,blue, brown, violet
+#from acoustics.generator import white, pink,blue, brown, violet
 from model_functions import calculating_class_weights, get_weighted_loss, f1
 from model_functions import LinearDecay, HalfDecay, PredictionHistory, LossHistory
 from visualize import visualize_weights
@@ -121,7 +121,7 @@ class AMTNetwork:
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=1, monitor='val_loss', verbose=0, mode='min')
+        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=0, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger,
