@@ -139,6 +139,8 @@ if __name__ == '__main__':
     else:
         at.load(baseModelPath)
         at.compilation(outputs)
+
+    exit()
     # initialize noiser:
     noise_generator = Noiser(noise_type="gaussian", noise_size=args['input_shape'])
 
@@ -210,6 +212,7 @@ if __name__ == '__main__':
 
     # Save np array of noise levels
     np.save("noise_levels", noise_levels)
+
 
     # end for noiseEpoch in range(args['noise_epochs'])
 
