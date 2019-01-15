@@ -200,6 +200,7 @@ if __name__ == '__main__':
     # Save np array of noise levels
     np.save(os.path.join('checkpoint_root',"noise_levels"), noise_levels)
 
+
     # end for noiseEpoch in range(args['noise_epochs'])
 
     # Final evaluation:

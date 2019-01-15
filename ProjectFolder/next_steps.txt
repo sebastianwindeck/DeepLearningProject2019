@@ -1,0 +1,29 @@
+Abgabe: Deadline Samstag Nacht 12am
+
+Aktueller Stand:
+
+Model_binary_crossentropy:
+•	Läuft auf cluster (bis etwa Mittwoch abend)
+•	Aktuell F1: 33%
+Model_weighted_loss:
+•	Läuft auf cluster
+•	Aktuell F1: 60%  (stagniert)
+•	Output der aktuellen parameter
+
+Next Steps:
+•	Noiser Training mit Zwischenergebnissen von „Model_weighted_Loss“
+o	Sebastian: Upload h5py
+o	Malte: Get Model Jason. For weighted_score funtion
+o	Sebastian: Try Noiser function & Transcriber fooling
+•	Visualisierung: Noise vs F1 von Basemodel und Adversarial:
+o	Zwischenoutputs: F1 score von jedem Noisewert (Auch für Basemodel!) für einen Teil des Datensets (e.g. 200.000 samples?) ? Speichern in CSV, callback
+•	Sebastian: Grafik: Weight über alle pitches visualisieren (e.g. über bar charts) 
+•	Andreas: Readme anfangen zu schreiben
+•	Andreas: Anfangen Report
+•	Heman: Visualisierung Wave Sample clean vs Wave sample mit noise (Als Grafik mit zwei Farben)
+
+Mögliche Ergebnisse:
+•	Binary_Crossentropy langsamer aber höhere Spitzenwert? Switch nach X Epochen (Visualisierung: F1 und Epochs)
+•	Grafik: Basemodel vs Adversarial trained model als Grafik (f1 und noise level)
+
+
