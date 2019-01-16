@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import datetime
 import inspect
 import os
@@ -8,8 +10,7 @@ import matplotlib.pyplot as plt
 from evaluate import pitch_confusion, final_score
 from extractfeatures import prepareData
 from model import Noiser, AMTNetwork
-import matplotlib
-matplotlib.use('Agg')
+
 from visualize import visualize_input
 
 # import foolbox
