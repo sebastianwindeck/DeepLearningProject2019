@@ -12,7 +12,7 @@ from keras.utils import plot_model
 from keras.losses import binary_crossentropy
 import keras
 
-#from acoustics.generator import white, pink,blue, brown, violet
+from acoustics.generator import white, pink,blue, brown, violet
 from model_functions import calculating_class_weights, get_weighted_loss, f1
 from model_functions import LinearDecay, HalfDecay, PredictionHistory, LossHistory
 from visualize import visualize_weights
