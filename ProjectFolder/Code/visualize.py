@@ -29,7 +29,7 @@ def visualize_input(inputs, save_path):
     sums = np.sum(inputs, axis=1).T
     fig, ax = plt.subplots()
     ax =sns.heatmap(sums[:,:1000])
-    ax.set_ylabel('Bandwidth')
+    ax.set_ylabel('CQT Bandwidth')
     ax.set_xlabel('Frames (time line)')
     ax.set_title('Midi heatmap (aggregated over windows for 1000 samples)')
     fig.savefig(save_path)  # save the figure to file
