@@ -205,7 +205,7 @@ if __name__ == '__main__':
         at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
                  train_descr='noisy_iter_' + str(noiseEpoch))
         np.save(os.path.join('checkpoint_root', "noise_levels"), noise_levels)
-        np.save(os.path.jpin('checkpoint_root', "bm_score"), bm_score)
+        np.save(os.path.join('checkpoint_root', "bm_score"), bm_score)
 
         if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
             y_pred = at.transcribe(noisy_inputs)
@@ -221,7 +221,7 @@ if __name__ == '__main__':
     # Save np array of noise levels
     np.save(os.path.join('checkpoint_root',"noise_levels"), noise_levels)
     print("all noise levels saved")
-    np.save(os.path.jpin('checkpoint_root',"bm_score"), bm_score)
+    np.save(os.path.join('checkpoint_root',"bm_score"), bm_score)
     print("all basemodel scores on noise levels saved")
 
     # end for noiseEpoch in range(args['noise_epochs'])
