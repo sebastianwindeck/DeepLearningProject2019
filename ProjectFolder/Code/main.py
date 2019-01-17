@@ -173,15 +173,16 @@ if __name__ == '__main__':
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
-            print("classigier changed by", classi_change)
+            print("classifier changed by", classi_change)
 
             if noise_level > 10e8 or noise_level < 10e-8:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
                 print("BREAK because of size threshold")
                 break
 
-            if classi_change > args['max_difficulty_on_noisy']:
+            elif classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
+                print("too hard")
                 noise_level /= args['noise_decrease_factor']
                 print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
@@ -189,6 +190,7 @@ if __name__ == '__main__':
             elif classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
+                print("too easy")
                 print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
@@ -197,6 +199,7 @@ if __name__ == '__main__':
                 # if we reach this point, the classi_perf is in the defined interval
                 # => Exit the while loop and train the amt with the new noisy data
                 break
+
 
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
