@@ -212,8 +212,8 @@ if __name__ == '__main__':
         noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
         at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
                  train_descr='noisy_iter_' + str(noiseEpoch))
-        np.save(os.path.join('checkpoint_root', "noise_levels"), noise_levels)
-        np.save(os.path.join('checkpoint_root', "bm_score"), bm_score)
+        np.save(os.path.join(args['checkpoint_root'], "noise_levels"), noise_levels)
+        np.save(os.path.join(args['checkpoint_root'], "bm_score"), bm_score)
         bm_pred = bm.getscores(noisy_inputs, outputs)
         bm_score = np.append(bm_score, bm_pred)
 
@@ -229,9 +229,9 @@ if __name__ == '__main__':
             #pitch_confusion(y_pred=y_pred, y_true=y_true, save_path=evaluatePath, description=str(noiseEpoch))
 
     # Save np array of noise levels
-    np.save(os.path.join('checkpoint_root',"noise_levels"), noise_levels)
+    np.save(os.path.join(args['checkpoint_root'],"noise_levels"), noise_levels)
     print("all noise levels saved")
-    np.save(os.path.join('checkpoint_root',"bm_score"), bm_score)
+    np.save(os.path.join(args['checkpoint_root'],"bm_score"), bm_score)
     print("all basemodel scores on noise levels saved")
 
     # end for noiseEpoch in range(args['noise_epochs'])
