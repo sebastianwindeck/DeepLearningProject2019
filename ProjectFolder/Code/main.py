@@ -51,7 +51,7 @@ if __name__ == '__main__':
         'epochs_on_noisy': 50,
         'noise_epochs': 20,
         'min_difficulty_on_noisy': 0.04,  # just a random value...
-        'max_difficulty_on_noisy': 0.15,  # just a random value...
+        'max_difficulty_on_noisy': 0.45,  # just a random value...
 
         # noise parameters:
         'noise_type': 'simplistic',
@@ -170,7 +170,9 @@ if __name__ == '__main__':
         while True:
             # b.	Combine noise with clean data (noise and audio)
             noisy_X = inputs[idx] + noise_level * this_noise
+            print("current noise level before test", noise_level)
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
+            print("current old noise level before test", noise_levels[noiseEpoch])
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
             print("classifier changed by", classi_change)
