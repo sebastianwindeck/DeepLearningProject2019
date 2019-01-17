@@ -56,9 +56,9 @@ if __name__ == '__main__':
         # noise parameters:
         'noise_type': 'simplistic',
         'noise_frames_per_epoch': 20,  # just a random value...
-        'noise_initial_level': 0.001,  # just a random value...
-        'noise_increase_factor': 1.5,  # just a random value...
-        'noise_decrease_factor': 1.5,  # just a random value...
+        'noise_initial_level': 0.1,  # just a random value...
+        'noise_increase_factor': 6,  # just a random value...
+        'noise_decrease_factor': 5,  # just a random value...
         'balance_classes': True,
 
         # directories:
@@ -173,6 +173,7 @@ if __name__ == '__main__':
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
             y = outputs[idx]
             classi_change = at.evaluation(noisy_X, noisy_Xold, y)
+            print("classigier changed by", classi_change)
 
             if noise_level > 10e8 or noise_level < 10e-8:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
@@ -182,13 +183,13 @@ if __name__ == '__main__':
             if classi_change > args['max_difficulty_on_noisy']:
                 # “too hard for AMT” -> decrease noise level
                 noise_level /= args['noise_decrease_factor']
-                print('Current noise level' + str(int(noise_level)) + ' in epoch ' + str(noiseEpoch))
+                print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
             if classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
-                print('Current noise level' + str(int(noise_level)) + ' in epoch ' + str(noiseEpoch))
+                print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
             print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
@@ -197,7 +198,7 @@ if __name__ == '__main__':
             break
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
-        bm_score = np.append.bm.getscores(noisy_inputs, outputs)
+
 
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         this_noise = noise_generator.generate(inputs.shape[0])
@@ -206,6 +207,8 @@ if __name__ == '__main__':
                  train_descr='noisy_iter_' + str(noiseEpoch))
         np.save(os.path.join('checkpoint_root', "noise_levels"), noise_levels)
         np.save(os.path.join('checkpoint_root', "bm_score"), bm_score)
+        bm_pred = bm.getscores(noisy_inputs, outputs)
+        bm_score = np.append(bm_score, bm_pred)
 
         if noiseEpoch != 0 and ((noiseEpoch & (noiseEpoch - 1)) == 0):
             y_pred = at.transcribe(noisy_inputs)
