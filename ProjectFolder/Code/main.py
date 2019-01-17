@@ -50,15 +50,15 @@ if __name__ == '__main__':
         'epochs_on_clean': 1000,
         'epochs_on_noisy': 50,
         'noise_epochs': 20,
-        'min_difficulty_on_noisy': 0.05,  # just a random value...
-        'max_difficulty_on_noisy': 0.10,  # just a random value...
+        'min_difficulty_on_noisy': 0.04,  # just a random value...
+        'max_difficulty_on_noisy': 0.15,  # just a random value...
 
         # noise parameters:
         'noise_type': 'simplistic',
         'noise_frames_per_epoch': 20,  # just a random value...
-        'noise_initial_level': 0.1,  # just a random value...
-        'noise_increase_factor': 6,  # just a random value...
-        'noise_decrease_factor': 5,  # just a random value...
+        'noise_initial_level': 0.03,  # just a random value...
+        'noise_increase_factor': 2.5,  # just a random value...
+        'noise_decrease_factor': 2,  # just a random value...
         'balance_classes': True,
 
         # directories:
@@ -186,16 +186,18 @@ if __name__ == '__main__':
                 print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
-            if classi_change < args['min_difficulty_on_noisy']:
+            elif classi_change < args['min_difficulty_on_noisy']:
                 # “too easy for AMT” -> increase noise level
                 noise_level *= args['noise_increase_factor']
                 print('Current noise level' + str(float(noise_level)) + ' in epoch ' + str(noiseEpoch))
                 continue  # Jump to the next cycle
 
-            print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
-            # if we reach this point, the classi_perf is in the defined interval
-            # => Exit the while loop and train the amt with the new noisy data
-            break
+            else:
+                print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
+                # if we reach this point, the classi_perf is in the defined interval
+                # => Exit the while loop and train the amt with the new noisy data
+                break
+
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
 
