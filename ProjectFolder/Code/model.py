@@ -121,7 +121,7 @@ class AMTNetwork:
                                           save_best_only=True, mode='min')
         # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
         # verbose=1, mode='min', period=50)
-        early_stop = EarlyStopping(patience=20, monitor='val_loss', verbose=0, mode='min')
+        early_stop = EarlyStopping(patience=30, monitor='val_loss', verbose=0, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
                      early_stop, decay, csv_logger,
@@ -131,7 +131,7 @@ class AMTNetwork:
         # self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
         # validation_split=0.1, class_weight=class_weights)
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
-                       validation_split=0.1, verbose=2)
+                       validation_split=0.2, verbose=2)
 
         # self.model.fit_generator(generator=next(trainGen),
         #                         steps_per_epoch=trainGen.steps, epochs=epochs,
