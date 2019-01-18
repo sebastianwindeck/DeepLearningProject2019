@@ -281,10 +281,7 @@ def take_every_second(args):
 
     mmi = np.memmap(filenameIN, mode='r', dtype="float64")
     inputs = np.reshape(mmi, (-1, window_size, n_bins))
-    inputs = inputs[ ::2, ]
-
-    mmi = np.memmap(filename=filenameIN, mode='r', shape=inputs.shape, dtype="float64")
-    mmi[:] = inputs[:]
+    inputs = inputs[::2, ]
 
     mmi2 = np.memmap(filename=filenameIN2, mode='w+', shape=inputs.shape, dtype="float64")
     mmi2[:] = inputs[:]
@@ -293,7 +290,7 @@ def take_every_second(args):
 
     mmo = np.memmap(filenameOUT, mode='r', dtype="float64")
     outputs = np.reshape(mmo, (-1, note_range))
-    outputs = outputs[ ::2, ]
+    outputs = outputs[::2, ]
 
     mmo2 = np.memmap(filename=filenameOUT2, mode='w+', shape=outputs.shape, dtype="float64")
     mmo2[:] = outputs[:]
