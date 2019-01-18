@@ -158,7 +158,11 @@ class AMTNetwork:
         score = self.model.evaluate(X,Y)
         return score
 
-    def evaluation(self, x_new, x_old, y_true):
+    def evaluate_old(self, x_old, y):
+        score = self.model.evaluate(x_old, y)[0]
+        return score
+
+    def evaluation(self, x_new, res_old, y_true):
 
         """ Evaluate score of predicting new noise level and compare it to score of old noise level.
 
@@ -173,7 +177,7 @@ class AMTNetwork:
         #print('Number of true notes: ', np.count_nonzero(y_true))
         #print('Number of predicted clean notes: ', np.count_nonzero(self.model.predict(x_old)))
         #print('Number of predicted noisy notes: ', np.count_nonzero(self.model.predict(x_new)))
-        res_old = self.model.evaluate(x_old, y_true)[0] #hier fehler nach ein paar schleifen...?wenn good
+         #hier fehler nach ein paar schleifen...?wenn good
         print("old score", res_old)
         dif = res_new - res_old
         dif_percent = dif / res_old

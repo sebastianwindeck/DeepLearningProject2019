@@ -151,6 +151,12 @@ if __name__ == '__main__':
     noise_levels = np.zeros(shape=1)
     noise_level = args['noise_initial_level']
 
+    #Initialize base loss
+    idx = np.random.randint(0, inputs.shape[0], args['noise_frames_per_epoch'])
+    input_clean = inputs[idx]
+    y = outputs[idx]
+    res_old = at.evaluate_old(input_clean, y)
+
     # loop over various noise epochs:
     #   DONE:   [all]        v.	For noiseEpochs = 1 … XXX
     for noiseEpoch in range(args['noise_epochs']):
@@ -174,7 +180,7 @@ if __name__ == '__main__':
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise
             print("current old noise level before test", noise_levels[noiseEpoch])
             y = outputs[idx]
-            classi_change = at.evaluation(noisy_X, noisy_Xold, y)
+            classi_change = at.evaluation(noisy_X, res_old, y)
             print("classifier changed by", classi_change)
 
             if noise_level > 10e8 or noise_level < 10e-8:
@@ -198,6 +204,7 @@ if __name__ == '__main__':
 
             else:
                 print("Noise Level is: ", noise_level, " in epoch ", noiseEpoch)
+                print("Noise Level accepted for training")
                 # if we reach this point, the classi_perf is in the defined interval
                 # => Exit the while loop and train the amt with the new noisy data
                 break
@@ -206,14 +213,18 @@ if __name__ == '__main__':
         # appending current noise level before training to numpy array "noise_levels"
         noise_levels = np.append(noise_levels, noise_level)
 
-
         # Train with noisy samples (for a given number of epochs, with intermed. Result saved)
         this_noise = noise_generator.generate(inputs.shape[0])
         noisy_inputs = inputs + np.random.uniform(0, noise_level, 1) * this_noise
+        print("start training")
         at.train(noisy_inputs, outputs, args=args, epochs=args['epochs_on_noisy'],
                  train_descr='noisy_iter_' + str(noiseEpoch))
 
+        #compute loss for next loop evaluation
+        res_old = at.evaluate_old(noisy_X, y)
+
         bm_pred = bm.getscores(noisy_inputs, outputs)
+        print("score of basemodel on noisy data", bm_pred)
         basemodel_score = np.append(basemodel_score, bm_pred)
         np.save(os.path.join(args['checkpoint_root'], "noise_levels"), noise_levels)
         np.save(os.path.join(args['checkpoint_root'], "bm_score"), basemodel_score)
