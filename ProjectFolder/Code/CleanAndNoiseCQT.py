@@ -37,10 +37,10 @@ plt.colorbar(format='%+2.0f dB')
 plt.title("CQT of clean wave")
 
 plt.subplot(122)
-d = np.abs(librosa.cqt(y[0:laenge] + wh[0:laenge], sr=sr))
+d = c + ampl * np.reshape(white(84*977), (84,977)) 
 librosa.display.specshow(librosa.amplitude_to_db(d, ref=np.max), sr=sr, y_axis = 'linear')
 plt.colorbar(format='%+2.0f dB')
-plt.title("CQT of noised wave")
+plt.title("noised CQT ")
 plt.tight_layout()
 
 plt.show()
