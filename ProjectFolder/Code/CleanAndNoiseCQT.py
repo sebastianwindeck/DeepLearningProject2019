@@ -20,7 +20,7 @@ rechts = data[0:laenge,1]
 maxdata = np.max(links)
 mindata = np.min(links)
 
-ampl = 0.02 * ( maxdata - mindata )
+ampl = 0.02
 
 wh = ampl * white(laenge)
 
@@ -33,14 +33,19 @@ plt.figure(figsize = (1,2))
 
 plt.subplot(121)
 librosa.display.specshow(librosa.amplitude_to_db(c, ref=np.max), sr=sr, y_axis = 'linear')
-plt.colorbar(format='%+2.0f dB')
+plt.colorbar() #plt.colorbar(format='%+2.0f dB')
+plt.xlabel("time")
+plt.ylabel("Frequency [Hz]")
 plt.title("CQT of clean wave")
 
 plt.subplot(122)
-d = c + ampl * np.reshape(white(84*977), (84,977)) 
+d = np.abs(librosa.cqt(y[0:laenge] + wh[0:laenge], sr=sr))
 librosa.display.specshow(librosa.amplitude_to_db(d, ref=np.max), sr=sr, y_axis = 'linear')
-plt.colorbar(format='%+2.0f dB')
-plt.title("noised CQT ")
+plt.colorbar()
+plt.xlabel("time")
+plt.ylabel("Frequency [Hz]")
+plt.title("CQT of noised wave")
+
 plt.tight_layout()
 
 plt.show()
