@@ -1,9 +1,10 @@
 import matplotlib
 import matplotlib.pyplot as plt
+matplotlib.use('Agg')
+
 import numpy as np
 import seaborn as sns
 from model_functions import calculating_class_weights
-matplotlib.use('Agg')
 
 
 def visualize_weights(y_true, save_path):

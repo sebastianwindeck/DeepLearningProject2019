@@ -1,12 +1,6 @@
-from scipy.io import wavfile
-
 import numpy as np
-from scipy import signal
-import matplotlib.pyplot as plt 
-
-import acoustics
+import matplotlib.pyplot as plt
 from acoustics.generator import white
-
 import soundfile as sf
 
 fname = "../MAPS_MUS-mond_1_SptkBGAm.wav"

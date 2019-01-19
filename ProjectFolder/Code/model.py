@@ -50,14 +50,9 @@ class AMTNetwork:
         pool2 = MaxPooling2D(pool_size=(1, 3))(do2)
 
         flattened = Flatten()(pool2)
-        # changed_AS
-        # fc1 = Dense(1000, activation='sigmoid')(flattened)
-
         fc1 = Dense(1000, activation='sigmoid')(flattened)
         do3 = Dropout(0.5)(fc1)
 
-        # changed_AS
-        # fc2 = Dense(200, activation='sigmoid')(do3)
         fc2 = Dense(200, activation='sigmoid')(do3)
         do4 = Dropout(0.5)(fc2)
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
@@ -86,9 +81,6 @@ class AMTNetwork:
         """
 
         batch_size = 256
-
-        # trainGen = Generator(features,labels, batch_size, args)
-        # valGen = Generator(features, labels, batch_size, args)
 
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
@@ -142,12 +134,12 @@ class AMTNetwork:
         # print('Number of true notes: ', np.count_nonzero(y_true))
         # print('Number of predicted clean notes: ', np.count_nonzero(self.model.predict(x_old)))
         # print('Number of predicted noisy notes: ', np.count_nonzero(self.model.predict(x_new)))
-        # hier fehler nach ein paar schleifen...?wenn good
+
         print("old score", res_old)
         dif = res_new - res_old
         dif_percent = dif / res_old
-        # print("neues Loss", res_new)
-        # print("altes Loss", res_old)
+        # print("new  Loss", res_new)
+        # print("old Loss", res_old)
         # print("loss has increased by", dif, "absolute")
         # print("loss has increased by", dif_percent, "percent")
 

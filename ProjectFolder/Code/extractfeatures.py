@@ -3,13 +3,8 @@ import numpy as np
 import os
 import pretty_midi
 
-# TODO [Andreas]: create .wav from "noise cqt" features
-
-# Andreas: Habe hier die Funktionen zum Einlesen der Daten und zur Extraktion der cqt-Features eingefügt (das meiste ist
-#          kopiert / adaptiert aus advTrain
-
 '''
-Dieses File enthält diverse Funktionen zur Extraktion von Audio-Features im weiteren Sinne.
+This file contains functions for feature extraction of an entire folder formatted as the MAPS dataset is.
 '''
 
 
@@ -41,15 +36,11 @@ def extract_features(audio_filename, args):
         y, _ = librosa.load(audio_filename, sr)
         # y: an np.ndarray[ shape=(n,) ] giving the audio time series. librosa.load automatically downsamples to the
         # required sample rate sr
-        # doku zu librosa.cqt:
+        # doku on librosa.cqt:
         # https://librosa.github.io/librosa/generated/librosa.core.cqt.html?highlight=cqt#librosa.core.cqts
         S = librosa.cqt(y, fmin=librosa.midi_to_hz(min_midi), sr=sr, hop_length=hop_length,
                         bins_per_octave=bins_per_octave, n_bins=n_bins)
         S = S.T
-
-        # AS: ich bin nicht sicher, was hier sinnvoller ist: abs oder amplitude_to_db. Das war so im preprocess.py von
-        # wav2mid-master. db ist eine logarithmische Skala
-        # S = librosa.amplitude_to_db(S)
         S = np.abs(S)
         min_db = np.min(S)
         print(np.min(S), np.max(S), np.mean(S))
@@ -191,9 +182,7 @@ def prepareData(args):
 
                         # check that num onsets is equal
                         if inputnp.shape[0] == outputnp.shape[0]:
-                            #print("adding to dataset fprefix {}".format(fprefix))
-
-                            # => add AS: Some filtering highly pragmatic filtering on the data!!
+                            # Some filtering highly pragmatic filtering on the data!!
                             # take only frames that are "sufficiently loud", ...
                             good2take = np.array(inputnp.max(axis=(1, 2)) > 0.05)
                             # ... and always omit the last frame as this has been padded ...
@@ -250,12 +239,9 @@ def prepareData(args):
     return inputs, outputs, datapath
 
 
-# End audio stuff
-
-
-# SW: Only for basic transformation and data set reduction
 def take_every_second(args):
     """reduce size of data by taking only every other sample.
+    This function was used for initial feature extraction and then again to train the base model further on noisy data
 
     :param args: Argument dictionary as used in all our functions.
     :return: input and output with reduced size

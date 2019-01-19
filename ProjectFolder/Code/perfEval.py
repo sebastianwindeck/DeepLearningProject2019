@@ -55,11 +55,8 @@ ax[0][1].tick_params(labelsize='small')
 ax[1][0].tick_params(labelsize='small')
 ax[1][1].tick_params(labelsize='small')
 fig.suptitle('Training epochs on noisy data with metric and loss')
-
-#fig.subplots_adjust(bottom=0.3, wspace=0.33)
 fig.legend(['Round ' + str(epo) for epo in range(i + 1)], ncol=int((i+1)/2),
            fontsize ='small', loc=8)
-#plt.tight_layout(pad=10, w_pad=0, h_pad=4)
 plt.show()
 
 # Learning curve of training and validation set
@@ -76,8 +73,6 @@ ax[1].set_ylabel('F1 Score')
 ax[1].set_xlabel('Epoch')
 ax[1].legend(loc='lower right', ncol=2)
 fig.suptitle('Learning curve with metric and loss function')
-
-#plt.tight_layout(pad=5, w_pad=0, h_pad=1.0)
 plt.show()
 
 # Noise development curve

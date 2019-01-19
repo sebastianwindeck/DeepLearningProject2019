@@ -35,21 +35,6 @@ class LinearDecay(Callback):
         K.set_value(self.model.optimizer.lr, new_lr)
 
 
-class HalfDecay(Callback):
-    # currently not used. Was copied from keras_train.py (but not used there neither)
-    # -> can probably be deleted.
-
-    def __init__(self, initial_lr, period):
-        super(HalfDecay, self).__init__()
-        self.init_lr = initial_lr
-        self.period = period
-
-    def on_epoch_begin(self, epoch, logs={}):
-        factor = epoch // self.period
-        lr = self.init_lr / (2 ** factor)
-        K.set_value(self.model.optimizer.lr, lr)
-
-
 class Threshold(Callback):
     """
         decay = decay value to subtract each epoch
@@ -96,7 +81,8 @@ class PredictionHistory(Callback):
 
 
 def f1(y_true, y_pred):
-    """
+    """Calculate F1 score.
+    
     :type y_true: tensorflow obeject
     :type y_pred: tensorflow obeject
     """

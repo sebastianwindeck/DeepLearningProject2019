@@ -16,25 +16,33 @@ if __name__ == '__main__':
 
     # Define a parameter structure args
     args = {  # model parameters:
-        'model_name': 'baseline', 'init_lr': 1e-1,  # für init lr geht auch 0.1
+        'model_name': 'baseline', 'init_lr': 1e-1,
         'lr_decay': 'linear',
 
         # parameters for audio
-        'bin_multiple': 3, 'residual': 'False', 'hop_length': 512, 'sr': 16000, 'spec_type': 'cqt', 'min_midi': 37,
-        # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
+        'bin_multiple': 3,
+        'residual': 'False',
+        'hop_length': 512,
+        'sr': 16000,
+        'spec_type': 'cqt',
+        'min_midi': 37,  # 21 corresponds to A0 (lowest tone on a "normal" piano), 27.5Hz
         'max_midi': 92,  # 108 corresponds to  C8 (highest tone on a "normal" piano), 4.2kHz
         'window_size': 7,  # choose higher value than 5
 
         # training parameters:
-        'train_basemodel': False, 'epochs_on_clean': 1000, 'epochs_on_noisy': 50, 'noise_epochs': 10,
-        'min_difficulty_on_noisy': 0.19,  # just a random value...
-        'max_difficulty_on_noisy': 0.60,  # just a random value...
+        'train_basemodel': True,
+        'epochs_on_clean': 1000,
+        'epochs_on_noisy': 50,
+        'noise_epochs': 10,
+        'min_difficulty_on_noisy': 0.19,
+        'max_difficulty_on_noisy': 0.60,
 
         # noise parameters:
-        'noise_type': 'simplistic', 'noise_frames_per_epoch': 100,  # just a random value...
-        'noise_initial_level': 0.03,  # just a random value...
-        'noise_increase_factor': 2.5,  # just a random value...
-        'noise_decrease_factor': 2,  # just a random value...
+        'noise_type': 'simplistic',
+        'noise_frames_per_epoch': 100,
+        'noise_initial_level': 0.03,
+        'noise_increase_factor': 2.5,
+        'noise_decrease_factor': 2,
         'balance_classes': True,
 
         # directories:
@@ -47,8 +55,7 @@ if __name__ == '__main__':
 
         'maxFramesPerFile': -1,  # set to -1 to ignore
         'maxFrames': -1  # set to -1 to ignore
-
-    }  # Feel free to add more parameters if needed.
+    }
 
     # derived parameters:
     args['note_range'] = args['max_midi'] - args['min_midi'] + 1
@@ -138,7 +145,7 @@ if __name__ == '__main__':
 
         classi_change = 0.00
         while True:
-            # b.	Combine noise with clean data (noise and audio)
+            # Combine noise with clean data (noise and audio)
             noisy_X = inputs[idx] + noise_level * this_noise
             print("current noise level before test", noise_level)
             noisy_Xold = inputs[idx] + noise_levels[noiseEpoch] * this_noise

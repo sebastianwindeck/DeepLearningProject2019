@@ -87,7 +87,6 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
     data_v = np.delete(data_v, np.where(data_v[:, 2] == 0), axis=0)
 
     # visualize data
-
     if vtype == 'heat':
         g = sns.heatmap(data=data)
         g.set_title('Diagram shows {0} map of {1} epoch'.format(vtype, description))
