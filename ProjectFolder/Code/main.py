@@ -61,20 +61,31 @@ if __name__ == '__main__':
         print("WARNING: Checkpoint root directory already exists!!")
     else:
         os.mkdir(args['checkpoint_root'])
+        print('Created checkpoint root.')
 
     if os.path.exists(args['basemodel_root']):
         print("WARNING: Basemodel root directory already exists!!")
     else:
         os.mkdir(args['basemodel_root'])
+        print('Created basemodel root.')
 
     inputs, outputs, datapath = prepareData(args)
     print("Inputs have shape: ", inputs.shape)
     print("Outputs have shape: ", outputs.shape)
-    print("Total number of notes detected in input set ", np.sum(inputs))
+    print("Total number of notes detected in input set ", np.sum(outputs))
     print("Number of 1s in output: ", sum(sum(outputs == 1)))
     print("Number of 0s in output: ", sum(sum(outputs == 0)))
     print("Size of outputs: ", outputs.size)
     print("=> 1s should be weighted ", sum(sum(outputs == 0)) / sum(sum(outputs == 1)))
+    input_level = np.mean(inputs)
+    print("Average sound level: ", input_level)
+    np.append(input_level, np.min(inputs))
+    np.append(input_level, np.max(inputs))
+    np.append(input_level, np.percentile(inputs, 25))
+    np.append(input_level, np.percentile(inputs, 50))
+    np.append(input_level, np.percentile(inputs, 75))
+    np.save(os.path.join(args['checkpoint_root'], "input_level"), input_level)
+    exit()
     visualize_input(inputs, save_path=os.path.join(args['checkpoint_root'], 'input_heatmap.png'))
 
     # initialize the amt model, and do an initial training
