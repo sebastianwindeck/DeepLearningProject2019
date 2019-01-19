@@ -19,7 +19,7 @@ rechts = data[0:laenge,1]
 maxdata = np.max(links)
 mindata = np.min(links)
 
-ampl = 0.02 * ( maxdata - mindata )
+ampl = 0.02
 
 wh = ampl * white(laenge)
 
