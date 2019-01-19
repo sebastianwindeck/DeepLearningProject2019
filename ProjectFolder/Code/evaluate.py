@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import classification_report
 
-# TODO: Malte check.
-
 
 def final_score(y_pred, y_true, description):
     if not y_pred.shape == y_true.shape:
@@ -13,16 +11,11 @@ def final_score(y_pred, y_true, description):
     # compare pred with true
     # number of true notes per time steps
     true_count = np.count_nonzero(y_true, axis=1)
-    # number of pred notes per time steps
-    pred_count = np.count_nonzero(y_pred, axis=1)
-
-    # TODO: [Sebastian] Create function to use several scoring functions, f1, accuracy, precision distribution /
-    # histogram of precision etc. over frames, possibly filtered e.g. by number of true notes in that frame.
 
     for i in np.unique(true_count):
         print("Report for {} in noise {} level".format(i, description))
-        print(classification_report(y_true=y_true[np.where(true_count == i)],y_pred=y_pred[np.where(true_count == i)]))
-        # save in variable to work with
+        print(classification_report(y_true=y_true[np.where(true_count == i)],
+                                    y_pred=y_pred[np.where(true_count == i)]))  # save in variable to work with
 
 
 def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
@@ -117,37 +110,3 @@ def pitch_confusion(y_pred, y_true, save_path, description, vtype='heat'):
     fig.savefig(save_path + str('_confusion_matrix_') + str(description) + str('_epoch.png'))
     plt.close(fig)
     print("Confusion Matrix done.")
-
-
-
-# comment AS: some old stuff, from keras_train. not sure whether this works with our training method, and if so
-# whether this is somehow usefull.
-'''
-# list all data in history
-print(history.history.keys())
-# summarize history for accuracy
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'val'], loc='upper left')
-plt.savefig('baseline/acc.png')'''
-
-'''
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'val'], loc='upper left')
-plt.savefig('loss.png')
-
-# test
-testGen = DataGen(os.path.join(path, 'data', 'test'), batch_size, args)
-
-res = model.evaluate_generator(testGen.next(), steps=testGen.steps())
-print(model.metrics_names)
-print(res)
-'''

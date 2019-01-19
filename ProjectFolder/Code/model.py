@@ -2,23 +2,16 @@ import os
 from operator import concat
 
 import numpy as np
-import tensorflow as tf
+from acoustics.generator import white, pink, blue, brown, violet
 from keras.callbacks import ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.layers import Conv2D, MaxPooling2D
 from keras.layers import Dense, Dropout, Flatten, Reshape, Input
 from keras.models import Model, model_from_json
-from keras.optimizers import SGD, Adam, Adamax, Nadam
+from keras.optimizers import SGD
 from keras.utils import plot_model
-from keras.losses import binary_crossentropy
-import keras
-
-from acoustics.generator import white, pink,blue, brown, violet
+from model_functions import LinearDecay, HalfDecay, PredictionHistory
 from model_functions import calculating_class_weights, get_weighted_loss, f1
-from model_functions import LinearDecay, HalfDecay, PredictionHistory, LossHistory
 from visualize import visualize_weights
-
-
-
 
 
 class AMTNetwork:
@@ -43,9 +36,6 @@ class AMTNetwork:
         self.lr_decay = args['lr_decay']
         self.checkpoint_root = args['checkpoint_root']
         self.balance_classes = args['balance_classes']
-
-        # MT: better use relu for hidden layers [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-        # sigmoid for output layer
 
         inputs = Input(shape=self.input_shape)
         reshape = Reshape(self.input_shape_channels)(inputs)
@@ -73,27 +63,23 @@ class AMTNetwork:
         outputs = Dense(self.note_range, activation='sigmoid')(do4)
 
         self.model = Model(inputs=inputs, outputs=outputs)
-        # MT: the best loss function for AMT binary_crossentropy according to
-        # [http://cs229.stanford.edu/proj2017/final-reports/5242716.pdf]
-
 
     def compilation(self, y_true, save_path):
 
         # plot balancing weight and save to file
-        visualize_weights(y_true,save_path)
+        visualize_weights(y_true, save_path)
 
-        #self.model.compile(loss='binary_crossentropy', optimizer= Nadam(lr=self.init_lr), metrics=[f1])
+        # compile model and visualize
         self.model.compile(loss=get_weighted_loss(calculating_class_weights(y_true, type='over_columns')),
-                           optimizer=SGD(lr=self.init_lr, momentum=0.9),metrics=[f1])
-        ##MT: hier können wir auch adam nehmen statt SGD (faster) --SGD hatte , momentum=0.9
+                           optimizer=SGD(lr=self.init_lr, momentum=0.9), metrics=[f1])
         self.model.summary()
         try:
             plot_model(self.model, to_file=os.path.join(self.checkpoint_root, 'model.png'))
+
         except:
-            print('error: could not create png')
+            print('Error: Could not create png')
 
-
-    def train(self, features, labels, args, epochs=1000, train_descr=''):
+    def train(self, features, labels, epochs=1000, train_descr=''):
         """
         Do training on the provided data set.
 
@@ -107,46 +93,25 @@ class AMTNetwork:
         # filenames
         model_ckpt = os.path.join(self.checkpoint_root, train_descr)
         csv_logger = CSVLogger(os.path.join(self.checkpoint_root, train_descr + 'training.log'))
-        predHist = PredictionHistory(features, labels)
+        pred_hist = PredictionHistory(features, labels)
 
         if self.lr_decay == 'linear':
             decay = LinearDecay(self.init_lr, epochs)
         else:
             decay = HalfDecay(self.init_lr, 5)
 
-        # comment SW:   checkpoint ist eine Callback Klasse, die das Model mit den Model-Parameter in eine Datei specihert.
-        #               Bei der aktuellen Konfiguration wird das Modell einmal gespeichert und zwar nur das beste Validation loss.
-        #               Wir müssen das Model nicht nochmal separat speichern, wenn wir diese Checkpoint-Callback implementieren.
         checkpoint_best = ModelCheckpoint(model_ckpt + '_best_weights.h5', monitor='val_loss', verbose=0,
                                           save_best_only=True, mode='min')
-        # checkpoint_nth = ModelCheckpoint(model_ckpt + '_weights.{epoch:02d}-{loss:.2f}.h5', monitor='val_loss',
-        # verbose=1, mode='min', period=50)
         early_stop = EarlyStopping(patience=30, monitor='val_loss', verbose=0, mode='min')
 
         callbacks = [checkpoint_best,  # checkpoint_nth,
-                     early_stop, decay, csv_logger,
-                     predHist]
-
-        # class_weights = NULL
-        # self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
-        # validation_split=0.1, class_weight=class_weights)
+                     early_stop, decay, csv_logger, pred_hist]
         self.model.fit(x=features, y=labels, callbacks=callbacks, epochs=epochs, batch_size=batch_size,
                        validation_split=0.2, verbose=2)
-
-        # self.model.fit_generator(generator=next(trainGen),
-        #                         steps_per_epoch=trainGen.steps, epochs=epochs,
-        #                        verbose=1,validation_data=next(valGen), validation_steps=valGen.steps,callbacks=callbacks)
-
-        # comment AS: Das hier ist der ursprüngliche Aufruf; die Daten werden iterativ "erzeugt" (=geladen aus den
-        # Files). Für uns ist das wohl nicht sinnvoll.
-        # history = model.fit_generator(trainGen.next(), trainGen.steps(), epochs=epochs,
-        #                              verbose=1, validation_data=valGen.next(), validation_steps=valGen.steps(),
-        #                              callbacks=callbacks)
 
     def transcribe(self, x):
 
         """ Apply learned model to data, and return the transcription.
-
         :param x: new data to be transcribed. Shape is (Nframes, self.window_size, self.feature_bins)
         :return: predicted transcription. Shape is (Nframes, ...)
         """
@@ -154,8 +119,8 @@ class AMTNetwork:
         y_pred = self.model.predict(x)
         return y_pred
 
-    def getscores(self, X, Y):
-        score = self.model.evaluate(X,Y)
+    def getscores(self, x, y):
+        score = self.model.evaluate(x, y)
         return score
 
     def evaluate_old(self, x_old, y):
@@ -167,17 +132,17 @@ class AMTNetwork:
         """ Evaluate score of predicting new noise level and compare it to score of old noise level.
 
                 :param x_new: is x clean combined with current noise_level
-                :param x_old: is x clean combined with noise level before current loop.
+                :param res_old: is old evaluation from base level set
                 :param y_true: is true labbeling of data
                 :return: percentage difference of new score compared to score of noise level of anterior loop
                 """
 
         res_new = self.model.evaluate(x_new, y_true)[0]
         print("new score", res_new)
-        #print('Number of true notes: ', np.count_nonzero(y_true))
-        #print('Number of predicted clean notes: ', np.count_nonzero(self.model.predict(x_old)))
-        #print('Number of predicted noisy notes: ', np.count_nonzero(self.model.predict(x_new)))
-         #hier fehler nach ein paar schleifen...?wenn good
+        # print('Number of true notes: ', np.count_nonzero(y_true))
+        # print('Number of predicted clean notes: ', np.count_nonzero(self.model.predict(x_old)))
+        # print('Number of predicted noisy notes: ', np.count_nonzero(self.model.predict(x_new)))
+        # hier fehler nach ein paar schleifen...?wenn good
         print("old score", res_old)
         dif = res_new - res_old
         dif_percent = dif / res_old
@@ -191,7 +156,6 @@ class AMTNetwork:
     def save(self, model_path):
         """
         :param model_path: String
-        :type model: keras.Model
         """
 
         with open(model_path + ".json", "w") as json_file:
@@ -210,6 +174,7 @@ class AMTNetwork:
         loaded_model.load_weights(model_path + ".h5")
         print("Loaded model from disk")
         self.model = loaded_model
+
 
 # Generator for sample batches
 class Generator:
@@ -238,13 +203,15 @@ class Generator:
 
             self.i += 1
 
+
 # Noise generator
 class Noiser:
 
     def __init__(self, noise_size, noise_type="simplistic"):
         self.noise_type = noise_type
         self.noise_size = noise_size
-        if self.noise_type.lower()  not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown', 'violet'} :
+        if self.noise_type.lower() not in {'simplistic', 'gaussian', 'white', 'normal', 'pink', 'blue', 'brown',
+                                           'violet'}:
             print("WARNING: noise type " + noise_type + " not implemented. Will not generate anything!!")
 
     def generate(self, n_noise_samples=1):
@@ -274,5 +241,4 @@ class Noiser:
             return np.reshape(violet(n), s)
         else:
             print("WARNING: noise type " + self.noise_type + " not defined. Returning 0")
-            return np.reshape(np.zeros((n)), s)
-
+            return np.reshape(np.zeros(n), s)
